@@ -2,5 +2,6 @@ package com.haksannaturals.ecommerce.entity;
 
 public enum AuthProvider {
     GOOGLE,
-    EMAIL_OTP
+    EMAIL_OTP,
+    PASSWORD
 }

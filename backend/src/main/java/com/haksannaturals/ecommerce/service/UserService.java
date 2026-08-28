@@ -35,6 +35,7 @@ public class UserService {
                     User user = User.builder()
                             .email(email)
                             .role(Role.CUSTOMER)
+                            .name(email.substring(0,5))
                             .authProvider(AuthProvider.GOOGLE)
                             .emailVerified(true)
                             .phoneVerified(false)
@@ -43,4 +44,11 @@ public class UserService {
                     return userRepository.save(user);
                 });
     }
+
+    public User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+
 }
