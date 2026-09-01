@@ -25,7 +25,14 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/api/products/**","/api/auth/**","/api/health")
+                .authorizeHttpRequests(auth -> auth.requestMatchers(
+                        "/api/products/**",
+                                 "/api/auth/**",
+                                 "/api/health",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
+                                )
                         .permitAll()
                         .requestMatchers("/api/admin/**")
                         .hasRole("ADMIN")
@@ -49,6 +56,14 @@ public class SecurityConfig {
                                         "Unauthorized"
                                 )
                 )
+                .accessDeniedHandler(
+                        (request, response, accessDeniedException) ->
+                                response.sendError(
+                                        HttpServletResponse.SC_FORBIDDEN,
+                                        "Forbidden"
+                                )
+                )
+
         );
         return  http.build();
     }

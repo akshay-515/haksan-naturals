@@ -1,17 +1,17 @@
 package com.haksannaturals.ecommerce.controller;
 
+import com.haksannaturals.ecommerce.dto.ProductUpdateRequest;
 import com.haksannaturals.ecommerce.entity.Product;
 import com.haksannaturals.ecommerce.service.ProductService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/products")
+@RequestMapping("/api/admin/products")
 @RequiredArgsConstructor
 public class ProductController {
 
@@ -26,4 +26,25 @@ public class ProductController {
     public Product getProduct(@PathVariable Long id) {
         return productService.getActiveProductById(id);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Product> updateProduct(
+            @PathVariable Long id,
+            @Valid @RequestBody ProductUpdateRequest request
+    ) {
+
+        Product product = productService.updateProduct(id, request);
+        return ResponseEntity.ok(product);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deactivateProduct(
+            @PathVariable Long id
+    ) {
+
+        productService.deactivateProduct(id);
+        return ResponseEntity.noContent().build();
+    }
+
+
 }
