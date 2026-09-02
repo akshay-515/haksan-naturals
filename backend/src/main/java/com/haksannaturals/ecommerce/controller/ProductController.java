@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/admin/products")
+@RequestMapping("/api/products")
 @RequiredArgsConstructor
 public class ProductController {
 
@@ -26,25 +26,4 @@ public class ProductController {
     public Product getProduct(@PathVariable Long id) {
         return productService.getActiveProductById(id);
     }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(
-            @PathVariable Long id,
-            @Valid @RequestBody ProductUpdateRequest request
-    ) {
-
-        Product product = productService.updateProduct(id, request);
-        return ResponseEntity.ok(product);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deactivateProduct(
-            @PathVariable Long id
-    ) {
-
-        productService.deactivateProduct(id);
-        return ResponseEntity.noContent().build();
-    }
-
-
 }

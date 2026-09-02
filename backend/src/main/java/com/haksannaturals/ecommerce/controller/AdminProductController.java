@@ -1,6 +1,7 @@
 package com.haksannaturals.ecommerce.controller;
 
 import com.haksannaturals.ecommerce.dto.ProductCreateRequest;
+import com.haksannaturals.ecommerce.dto.ProductUpdateRequest;
 import com.haksannaturals.ecommerce.entity.Product;
 import com.haksannaturals.ecommerce.service.ProductService;
 import jakarta.validation.Valid;
@@ -26,5 +27,24 @@ public class AdminProductController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(product);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Product> updateProduct(
+            @PathVariable Long id,
+            @Valid @RequestBody ProductUpdateRequest request
+    ) {
+
+        Product product = productService.updateProduct(id, request);
+        return ResponseEntity.ok(product);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deactivateProduct(
+            @PathVariable Long id
+    ) {
+
+        productService.deactivateProduct(id);
+        return ResponseEntity.noContent().build();
     }
 }
