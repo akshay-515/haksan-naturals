@@ -29,10 +29,11 @@ public class Payment {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private String status;
+    private PaymentStatus status;
 
-    @Column(name = "payment_method", length = 100)
+    @Column(name = "payment_method", length = 50)
     private String paymentMethod;
 
     @Column(name = "created_at", nullable = false)

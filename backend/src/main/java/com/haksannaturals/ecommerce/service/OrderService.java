@@ -3,6 +3,7 @@ package com.haksannaturals.ecommerce.service;
 import com.haksannaturals.ecommerce.dto.OrderCreateRequest;
 import com.haksannaturals.ecommerce.dto.OrderItemResponse;
 import com.haksannaturals.ecommerce.dto.OrderResponse;
+import com.haksannaturals.ecommerce.dto.OrderStatusUpdateRequest;
 import com.haksannaturals.ecommerce.entity.*;
 import com.haksannaturals.ecommerce.repository.AddressRepository;
 import com.haksannaturals.ecommerce.repository.CartItemRepository;
@@ -137,13 +138,9 @@ public class OrderService {
 
         orderItemRepository.saveAll(orderItems);
 
-        // 9. Clear cart
-        cartItemRepository.deleteByCartId(cart.getId());
-
+        cart.getItems().clear();
         cart.setUpdatedAt(now);
-        cartRepository.save(cart);
 
-        // 10. Return response
         return buildOrderResponse(savedOrder, orderItems);
     }
 
@@ -189,5 +186,69 @@ public class OrderService {
                 .createdAt(order.getCreatedAt())
                 .items(items)
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderResponse>  getMyOrders() {
+
+        Long userId = currentUserService.getCurrentUserId();
+
+        List<Order> orders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
+
+        return orders.stream()
+                .map(order -> {
+                    List<OrderItem> orderItems =
+                            orderItemRepository.findByOrderId(order.getId());
+
+                    return buildOrderResponse(order, orderItems);
+                })
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public OrderResponse getOrderById(Long orderId) {
+
+        Long userId = currentUserService.getCurrentUserId();
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order Not Found"));
+
+        if(!order.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Order does not belong to the User");
+        }
+
+        List<OrderItem> orderItems = orderItemRepository.findByOrderId(order.getId());
+
+        return buildOrderResponse(order, orderItems);
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderResponse> getAllOrders() {
+        List<Order> orders = orderRepository.findAllByOrderByCreatedAtDesc();
+
+        return orders.stream()
+                .map(order -> {
+                    List<OrderItem> orderItems =
+                            orderItemRepository.findByOrderId(order.getId());
+
+                    return buildOrderResponse(order, orderItems);
+                })
+                .toList();
+    }
+
+    @Transactional
+    public OrderResponse updateOrderStatus(Long orderId, OrderStatusUpdateRequest request) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order Not Found"));
+
+        order.setStatus(request.getStatus());
+        order.setUpdatedAt(LocalDateTime.now());
+
+        Order savedOrder = orderRepository.save(order);
+
+        List<OrderItem> orderItems =
+                orderItemRepository.findByOrderId(savedOrder.getId());
+
+        return buildOrderResponse(savedOrder, orderItems);
     }
 }
