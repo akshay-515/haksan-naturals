@@ -26,6 +26,9 @@ public class Payment {
     @Column(name = "payment_id")
     private String paymentId;
 
+    @Column(name = "razorpay_order_id", unique = true)
+    private String razorpayOrderId;
+
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
