@@ -1,14 +1,15 @@
 interface CartItem {
-  id: number;
+  itemId: number;
   productId: number;
   productName: string;
   price: number;
+  imageUrl: string | null;
   quantity: number;
   subtotal: number;
 }
 
 interface Cart {
-  id: number;
+  cartId: number;
   items: CartItem[];
   totalAmount: number;
 }

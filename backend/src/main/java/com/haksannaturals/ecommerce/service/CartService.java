@@ -92,7 +92,7 @@ public class CartService {
     }
 
     @Transactional
-    public CartItem addToCart(CartItemRequest request) {
+    public void addToCart(CartItemRequest request) {
 
         Cart cart = getOrCreateCart();
 
@@ -126,11 +126,11 @@ public class CartService {
 
         cartRepository.save(cart);
 
-        return cartItemRepository.save(cartItem);
+        cartItemRepository.save(cartItem);
     }
 
     @Transactional
-    public CartItem updateQuantity(Long itemId, Integer quantity) {
+    public void updateQuantity(Long itemId, Integer quantity) {
 
         if (quantity < 1) {
             throw new RuntimeException("Quantity must be at least 1");
@@ -154,7 +154,7 @@ public class CartService {
 
         cartRepository.save(cart);
 
-        return cartItemRepository.save(cartItem);
+        cartItemRepository.save(cartItem);
     }
 
     @Transactional

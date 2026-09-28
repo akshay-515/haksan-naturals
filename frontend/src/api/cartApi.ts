@@ -43,16 +43,9 @@ const removeCartItem = async (itemId: number) => {
   return response.data;
 };
 
-const clearCart = async () => {
-  await apiClient.delete("/api/cart");
-
-  return;
-};
-
 export {
   getCart,
   addToCart,
   updateCartItem,
   removeCartItem,
-  clearCart,
 };

@@ -47,7 +47,12 @@ const Navbar = () => {
                 <User size={20} />
                 <span className="text-sm font-medium">Account</span>
               </Link>
-
+              <Link
+                to="/addresses"
+                className="text-sm text-gray-700 hover:text-green-600"
+              >
+                Addresses
+              </Link>
               <button
                 type="button"
                 onClick={logout}

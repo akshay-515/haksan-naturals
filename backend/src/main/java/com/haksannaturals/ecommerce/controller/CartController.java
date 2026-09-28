@@ -2,12 +2,9 @@ package com.haksannaturals.ecommerce.controller;
 
 import com.haksannaturals.ecommerce.dto.CartItemRequest;
 import com.haksannaturals.ecommerce.dto.CartResponse;
-import com.haksannaturals.ecommerce.entity.Cart;
-import com.haksannaturals.ecommerce.entity.CartItem;
 import com.haksannaturals.ecommerce.service.CartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,43 +24,49 @@ public class CartController {
     }
 
     @PostMapping("/items")
-    public ResponseEntity<CartItem> addToCart(
+    public ResponseEntity<CartResponse> addToCart(
             @Valid @RequestBody CartItemRequest request
     ) {
 
-        CartItem cartItem = cartService.addToCart(request);
+        cartService.addToCart(request);
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(cartItem);
+        return ResponseEntity.ok(
+                cartService.getCartResponse()
+        );
     }
 
     @PutMapping("/items/{itemId}")
-    public ResponseEntity<CartItem> updateQuantity(
+    public ResponseEntity<CartResponse> updateQuantity(
             @PathVariable Long itemId,
             @RequestParam Integer quantity
     ) {
 
-        CartItem cartItem = cartService.updateQuantity(itemId, quantity);
+        cartService.updateQuantity(itemId, quantity);
 
-        return ResponseEntity.ok(cartItem);
+        return ResponseEntity.ok(
+                cartService.getCartResponse()
+        );
     }
 
     @DeleteMapping("/items/{itemId}")
-    public ResponseEntity<Void> removeItem(
+    public ResponseEntity<CartResponse> removeItem(
             @PathVariable Long itemId
     ) {
 
         cartService.removeItem(itemId);
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(
+                cartService.getCartResponse()
+        );
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> clearCart() {
+    public ResponseEntity<CartResponse> clearCart() {
 
         cartService.clearCart();
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(
+                cartService.getCartResponse()
+        );
     }
 }
