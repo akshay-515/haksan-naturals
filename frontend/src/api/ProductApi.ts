@@ -1,4 +1,4 @@
-import { apiClient } from "./Client";
+import { apiClient } from "./client";
 import type { Product } from "../types/product";
 
 const getProducts = async () => {

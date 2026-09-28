@@ -1,4 +1,4 @@
-import { apiClient } from "./Client";
+import { apiClient } from "./client";
 import type { Address, AddressRequest } from "../types/address";
 
 const getAddresses = async () => {

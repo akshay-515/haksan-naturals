@@ -1,4 +1,4 @@
-import { apiClient } from "./Client"; 
+import { apiClient } from "./client"; 
 import type { Order, OrderCreateRequest } from "../types/order";
 
 const createOrder = async (request: OrderCreateRequest) => {

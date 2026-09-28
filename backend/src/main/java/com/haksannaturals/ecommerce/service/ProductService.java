@@ -18,6 +18,10 @@ public class ProductService {
         return productRepository.findByActiveTrue();
     }
 
+    public List<Product> getAllProductsForAdmin() {
+        return productRepository.findAll();
+    }
+
     public Product getActiveProductById(Long id) {
 
         return productRepository.findById(id)

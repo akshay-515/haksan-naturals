@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { apiClient } from "./api/Client";
+import { apiClient } from "./api/client";
 import { Navbar } from "./components/layout/Navbar";
 import { AppRoutes } from "./routes/AppRoutes";
 

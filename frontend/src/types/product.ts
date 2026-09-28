@@ -5,6 +5,7 @@ interface Product {
   price: number;
   stock: number;
   imageUrl: string | null;
+  category: string;
   active: boolean;
 }
 

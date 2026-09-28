@@ -48,6 +48,12 @@ const Navbar = () => {
                 <span className="text-sm font-medium">Account</span>
               </Link>
               <Link
+                to="/orders"
+                className="text-gray-700 hover:text-green-600"
+              >
+                My Orders
+              </Link>
+              <Link
                 to="/addresses"
                 className="text-sm text-gray-700 hover:text-green-600"
               >

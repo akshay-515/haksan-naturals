@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getOrderById } from "../../api/orderApi";
+import { createPayment, verifyPayment } from "../../api/paymentApi";
 import type { Order } from "../../types/order";
 
 const OrderDetailsPage = () => {
@@ -10,6 +11,8 @@ const OrderDetailsPage = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [paying, setPaying] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
 
   useEffect(() => {
     const loadOrder = async () => {
@@ -31,6 +34,54 @@ const OrderDetailsPage = () => {
 
     loadOrder();
   }, [orderId]);
+
+  const handlePayment = async () => {
+    setPaying(true);
+    setPaymentError("");
+
+    try {
+        const payment = await createPayment({
+        orderId: order.orderId,
+        });
+
+        const options = {
+        key: payment.razorpayKeyId,
+        amount: payment.amount * 100,
+        currency: payment.currency,
+        name: "Haksan Naturals",
+        description: `Order #${order.orderId}`,
+        order_id: payment.razorpayOrderId,
+
+        handler: async (response: RazorpayPaymentResponse) => {
+            try {
+            await verifyPayment({
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+            });
+
+            const updatedOrder = await getOrderById(order.orderId);
+            setOrder(updatedOrder);
+            } catch {
+            setPaymentError("Payment verification failed.");
+            } finally {
+            setPaying(false);
+            }
+        },
+
+        theme: {
+            color: "#16a34a",
+        },
+        };
+
+        const razorpay = new window.Razorpay(options);
+
+        razorpay.open();
+    } catch {
+        setPaymentError("Failed to start payment.");
+        setPaying(false);
+    }
+    };
 
   if (loading) {
     return (
@@ -166,15 +217,19 @@ const OrderDetailsPage = () => {
             <span>₹{order.totalAmount}</span>
           </div>
 
+          {paymentError && (
+            <div className="mt-4 rounded-lg bg-red-50 p-4 text-sm text-red-700">
+              {paymentError}
+            </div>
+           )}
+
           {order.paymentStatus === "PENDING" && (
             <button
               type="button"
-              onClick={() => {
-                // Razorpay integration will be added next.
-              }}
+              onClick={handlePayment}
               className="mt-6 w-full rounded-md bg-green-600 px-5 py-3 font-semibold text-white hover:bg-green-700"
             >
-              Pay Now
+              {paying ? "Processing..." : "Pay Now"}
             </button>
           )}
 

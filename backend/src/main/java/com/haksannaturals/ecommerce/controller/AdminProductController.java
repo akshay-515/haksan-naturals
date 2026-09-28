@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/admin/products")
 @RequiredArgsConstructor
@@ -27,6 +29,13 @@ public class AdminProductController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(product);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Product>> getAllProducts() {
+        return ResponseEntity.ok(
+                productService.getAllProductsForAdmin()
+        );
     }
 
     @PutMapping("/{id}")

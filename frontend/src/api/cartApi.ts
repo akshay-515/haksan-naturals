@@ -1,4 +1,4 @@
-import { apiClient } from "./Client";
+import { apiClient } from "./client";
 import type { Cart } from "../types/cart";
 
 interface CartItemRequest {
