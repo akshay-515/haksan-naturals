@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createProduct } from "../../api/adminProductApi";
+import { createProduct, uploadProductImage } from "../../api/adminProductApi";
 import type { AdminProductRequest } from "../../types/adminProduct";
 
 const AdminProductFormPage = () => {
@@ -17,6 +17,7 @@ const AdminProductFormPage = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleChange = (
     event: React.ChangeEvent<
@@ -34,6 +35,14 @@ const AdminProductFormPage = () => {
     }));
   };
 
+  const handleFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0] ?? null;
+
+    setSelectedFile(file);
+  };
+
   const handleSubmit = async (
     event: React.FormEvent<HTMLFormElement>
   ) => {
@@ -43,7 +52,18 @@ const AdminProductFormPage = () => {
     setError("");
 
     try {
-      await createProduct(form);
+      if (!selectedFile) {
+        setError("Please select a product image.");
+        return;
+      }
+
+      const imageResponse = await uploadProductImage(selectedFile);
+
+      await createProduct({
+        ...form,
+        imageUrl: imageResponse.imageUrl,
+      });
+
       navigate("/admin/products");
     } catch {
       setError("Failed to create product.");
@@ -176,26 +196,26 @@ const AdminProductFormPage = () => {
 
         <div>
           <label
-            htmlFor="imageUrl"
+            htmlFor="image"
             className="mb-2 block text-sm font-medium text-gray-700"
           >
-            Image URL
+            Product Image
           </label>
 
           <input
-            id="imageUrl"
-            name="imageUrl"
-            type="url"
-            value={form.imageUrl}
-            onChange={handleChange}
+            id="image"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleFileChange}
             required
-            placeholder="https://..."
-            className="w-full rounded-md border border-gray-300 px-4 py-3 outline-none focus:border-green-600"
+            className="w-full rounded-md border border-gray-300 px-4 py-3"
           />
 
-          <p className="mt-2 text-xs text-gray-500">
-            Image upload will be integrated later.
-          </p>
+          {selectedFile && (
+            <p className="mt-2 text-xs text-gray-500">
+              Selected: {selectedFile.name}
+            </p>
+          )}
         </div>
 
         <div className="flex gap-4 pt-2">

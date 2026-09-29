@@ -35,9 +35,27 @@ const getAdminProducts = async () => {
   return response.data;
 };
 
+const activateProduct = async (productId: number) => {
+  await apiClient.put(`/api/admin/products/${productId}/activate`)
+}
+
+const uploadProductImage = async (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await apiClient.post<{ imageUrl: string }>(
+    "/api/admin/products/image",
+    formData
+  );
+
+  return response.data;
+};
+
 export {
   getAdminProducts,
   createProduct,
   updateProduct,
   deactivateProduct,
+  activateProduct,
+  uploadProductImage
 };

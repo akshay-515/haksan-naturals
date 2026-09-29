@@ -48,6 +48,12 @@ public class AdminProductController {
         return ResponseEntity.ok(product);
     }
 
+    @PutMapping("/{id}/activate")
+    public ResponseEntity<Void> activateProduct(@PathVariable Long id) {
+        productService.activateProduct(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deactivateProduct(
             @PathVariable Long id

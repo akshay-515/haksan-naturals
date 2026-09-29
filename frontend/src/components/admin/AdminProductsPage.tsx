@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getAdminProducts } from "../../api/adminProductApi";
-import { deactivateProduct } from "../../api/adminProductApi";
+import { getAdminProducts, deactivateProduct, activateProduct } from "../../api/adminProductApi";
 import type { Product } from "../../types/product";
 
 const AdminProductsPage = () => {
@@ -46,6 +45,23 @@ const AdminProductsPage = () => {
   if (loading) {
     return <p className="text-gray-600">Loading products...</p>;
   }
+
+  const handleActivate = async (productId: number) => {
+  const confirmed = window.confirm(
+    "Are you sure you want to activate this product?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    await activateProduct(productId);
+    await loadProducts();
+  } catch {
+    setError("Failed to activate product.");
+  }
+};
 
   return (
     <div>
@@ -173,15 +189,21 @@ const AdminProductsPage = () => {
                           Edit
                         </Link>
 
-                        {product.active && (
+                        {product.active ? (
                           <button
                             type="button"
-                            onClick={() =>
-                              handleDeactivate(product.id)
-                            }
-                            className="text-sm font-medium text-red-600 hover:text-red-700"
+                            onClick={() => handleDeactivate(product.id)}
+                            className="text-red-600 hover:text-red-800"
                           >
                             Deactivate
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleActivate(product.id)}
+                            className="text-green-600 hover:text-green-800"
+                          >
+                            Activate
                           </button>
                         )}
                       </div>

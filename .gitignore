@@ -19,3 +19,6 @@ target/
 # OS
 .DS_Store
 Thumbs.db
+
+#minio-token/key
+minio.license
