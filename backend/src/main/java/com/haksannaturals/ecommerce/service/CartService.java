@@ -103,15 +103,24 @@ public class CartService {
             throw new RuntimeException("Product is not available");
         }
 
+        if (request.getQuantity() > product.getStock()) {
+            throw new RuntimeException("Requested quantity exceeds available stock");
+        }
+
         CartItem cartItem = cartItemRepository
                 .findByCartIdAndProductId(cart.getId(), product.getId())
                 .orElse(null);
 
         if (cartItem != null) {
 
-            cartItem.setQuantity(
-                    cartItem.getQuantity() + request.getQuantity()
-            );
+            int newQuantity =
+                    cartItem.getQuantity() + request.getQuantity();
+
+            if (newQuantity > product.getStock()) {
+                throw new RuntimeException("Requested quantity exceeds available stock");
+            }
+
+            cartItem.setQuantity(newQuantity);
 
         } else {
 
@@ -146,6 +155,12 @@ public class CartService {
 
         if (!cartItem.getCart().getId().equals(cart.getId())) {
             throw new RuntimeException("Cart item does not belong to the user");
+        }
+
+        Product product = cartItem.getProduct();
+
+        if (quantity > product.getStock()) {
+            throw new RuntimeException("Requested quantity exceeds available stock");
         }
 
         cartItem.setQuantity(quantity);

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   getAdminProducts,
   updateProduct,
+  uploadProductImage
 } from "../../api/adminProductApi";
 import type { AdminProductRequest } from "../../types/adminProduct";
 
@@ -19,6 +20,7 @@ const AdminProductEditPage = () => {
     stock: 0,
   });
 
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -77,6 +79,13 @@ const AdminProductEditPage = () => {
     }));
   };
 
+  const handleFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0] ?? null;
+    setSelectedFile(file);
+  };
+
   const handleSubmit = async (
     event: React.FormEvent<HTMLFormElement>
   ) => {
@@ -90,7 +99,18 @@ const AdminProductEditPage = () => {
     setError("");
 
     try {
-      await updateProduct(Number(productId), form);
+      let imageUrl = form.imageUrl;
+
+      if (selectedFile) {
+        const imageResponse = await uploadProductImage(selectedFile);
+        imageUrl = imageResponse.imageUrl;
+      }
+
+      await updateProduct(Number(productId), {
+        ...form,
+        imageUrl,
+      });
+
       navigate("/admin/products");
     } catch {
       setError("Failed to update product.");
@@ -244,21 +264,25 @@ const AdminProductEditPage = () => {
 
         <div>
           <label
-            htmlFor="imageUrl"
+            htmlFor="image"
             className="mb-2 block text-sm font-medium text-gray-700"
           >
-            Image URL
+            Product Image
           </label>
 
           <input
-            id="imageUrl"
-            name="imageUrl"
-            type="url"
-            value={form.imageUrl}
-            onChange={handleChange}
-            required
-            className="w-full rounded-md border border-gray-300 px-4 py-3 outline-none focus:border-green-600"
+            id="image"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleFileChange}
+            className="w-full rounded-md border border-gray-300 px-4 py-3"
           />
+
+          {selectedFile && (
+            <p className="mt-2 text-xs text-gray-500">
+              New image: {selectedFile.name}
+            </p>
+          )}
         </div>
 
         <div className="flex gap-4 pt-2">

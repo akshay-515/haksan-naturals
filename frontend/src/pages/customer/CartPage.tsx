@@ -93,58 +93,77 @@ const CartPage = () => {
       <div className="mt-8 space-y-4">
         {cart.items.map((item) => (
         <div
-          key={item.itemId}
-          className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
-        >
-          <div>
-            <h3 className="font-semibold text-gray-900">
-              {item.productName}
-            </h3>
-
-            <p className="mt-1 text-sm text-gray-600">
-              ₹{item.price}
-            </p>
-
-            <div className="mt-3 flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() =>
-                  handleQuantityChange(item.itemId, item.quantity - 1)
-                }
-                disabled={item.quantity <= 1}
-                className="h-8 w-8 rounded border border-gray-300 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                −
-              </button>
-
-              <span className="min-w-6 text-center">
-                {item.quantity}
-              </span>
-
-              <button
-                type="button"
-                onClick={() =>
-                  handleQuantityChange(item.itemId, item.quantity + 1)
-                }
-                className="h-8 w-8 rounded border border-gray-300 hover:bg-gray-100"
-              >
-                +
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleRemoveItem(item.itemId)}
-                className="ml-3 text-sm font-medium text-red-600 hover:text-red-700"
-              >
-                Remove
-              </button>
-            </div>
-          </div>
-
-          <p className="font-semibold text-gray-900">
-            ₹{item.subtotal}
-          </p>
+  key={item.itemId}
+className="grid min-h-36 grid-cols-1 gap-5 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:grid-cols-[1fr_auto] sm:items-start">
+  {/* Product Information */}
+  <div className="flex gap-4">
+    <div className="h-24 w-24 shrink-0 overflow-hidden rounded-md bg-gray-100">
+      {item.imageUrl ? (
+        <img
+          src={item.imageUrl}
+          alt={item.productName}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <div className="flex h-full items-center justify-center text-xs text-gray-500">
+          No image
         </div>
+      )}
+    </div>
+
+    <div>
+      <h3 className="font-semibold text-gray-900">
+        {item.productName}
+      </h3>
+
+      <p className="mt-1 text-sm text-gray-600">
+        ₹{item.price} each
+      </p>
+
+      <div className="mt-3 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() =>
+            handleQuantityChange(item.itemId, item.quantity - 1)
+          }
+          disabled={item.quantity <= 1}
+          className="h-8 w-8 rounded border border-gray-300 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          −
+        </button>
+
+        <span className="min-w-6 text-center">
+          {item.quantity}
+        </span>
+
+        <button
+          type="button"
+          onClick={() =>
+            handleQuantityChange(item.itemId, item.quantity + 1)
+          }
+          className="h-8 w-8 rounded border border-gray-300 hover:bg-gray-100"
+        >
+          +
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleRemoveItem(item.itemId)}
+          className="ml-3 text-sm font-medium text-red-600 hover:text-red-700"
+        >
+          Remove
+        </button>
+      </div>
+    </div>
+  </div>
+
+  {/* Subtotal */}
+  <div className="sm:min-w-24 sm:text-right">
+    <p className="font-semibold text-gray-900">
+      ₹{item.subtotal}
+    </p>
+  </div>
+</div>
         ))}
       </div>
 

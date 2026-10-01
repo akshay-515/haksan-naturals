@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getProducts } from "../../api/ProductApi";
 import type { Product } from "../../types/product";
 import { ProductCard } from "../../components/product/ProductCard";
@@ -7,6 +7,9 @@ const ProductsPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -23,6 +26,28 @@ const ProductsPage = () => {
 
     loadProducts();
   }, []);
+
+  const categories = useMemo(() => {
+    const uniqueCategories = Array.from(
+      new Set(products.map((product) => product.category))
+    );
+
+    return ["All", ...uniqueCategories];
+  }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      const matchesSearch = product.name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
+      const matchesCategory =
+        selectedCategory === "All" ||
+        product.category === selectedCategory;
+
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, searchTerm, selectedCategory]);
 
   if (loading) {
     return (
@@ -46,14 +71,46 @@ const ProductsPage = () => {
         Our Products
       </h2>
 
-      <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {products.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-          />
-        ))}
+      {/* Search and Filter */}
+      <div className="mt-6 flex flex-col gap-4 sm:flex-row">
+        <input
+          type="text"
+          placeholder="Search products..."
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.target.value)}
+          className="w-full rounded-md border border-gray-300 px-4 py-2 outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 sm:flex-1"
+        />
+
+        <select
+          value={selectedCategory}
+          onChange={(event) => setSelectedCategory(event.target.value)}
+          className="rounded-md border border-gray-300 px-4 py-2 outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
+        >
+          {categories.map((category) => (
+            <option key={category} value={category}>
+              {category}
+            </option>
+          ))}
+        </select>
       </div>
+
+      {/* Products */}
+      {filteredProducts.length === 0 ? (
+        <div className="mt-10 rounded-lg border border-gray-200 bg-gray-50 px-6 py-10 text-center">
+          <p className="text-gray-600">
+            No products found.
+          </p>
+        </div>
+      ) : (
+        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+            />
+          ))}
+        </div>
+      )}
     </main>
   );
 };

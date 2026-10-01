@@ -18,11 +18,13 @@ interface PaymentVerifyRequest {
   razorpaySignature: string;
 }
 
-interface PaymentVerifyResponse {
-  paymentId: number;
-  orderId: number;
-  status: string;
-}
+// interface PaymentVerifyResponse {
+//   paymentId: number;
+//   orderId: number;
+//   status: string;
+// }
+
+type PaymentVerifyResponse = string;
 
 export type {
   PaymentCreateRequest,

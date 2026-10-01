@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getOrderById } from "../../api/orderApi";
 import { createPayment, verifyPayment } from "../../api/paymentApi";
+import { loadRazorpay } from "../../utils/razorpay";
 import type { Order } from "../../types/order";
 
 const OrderDetailsPage = () => {
@@ -36,13 +37,24 @@ const OrderDetailsPage = () => {
   }, [orderId]);
 
   const handlePayment = async () => {
+
+    if (!order) {
+      setPaymentError("Order details are not available.");
+      return;
+    }
     setPaying(true);
     setPaymentError("");
 
     try {
         const payment = await createPayment({
-        orderId: order.orderId,
+          orderId: order.orderId,
         });
+
+        const razorpayLoaded = await loadRazorpay();
+
+        if (!razorpayLoaded) {
+          throw new Error("Failed to load Razorpay checkout.");
+        }
 
         const options = {
         key: payment.razorpayKeyId,
@@ -67,6 +79,13 @@ const OrderDetailsPage = () => {
             } finally {
             setPaying(false);
             }
+        },
+
+        modal: {
+          ondismiss: () => {
+            setPaymentError("Payment was cancelled.");
+            setPaying(false);
+          },
         },
 
         theme: {
@@ -227,7 +246,8 @@ const OrderDetailsPage = () => {
             <button
               type="button"
               onClick={handlePayment}
-              className="mt-6 w-full rounded-md bg-green-600 px-5 py-3 font-semibold text-white hover:bg-green-700"
+              disabled={paying}
+              className="mt-6 w-full rounded-md bg-green-600 px-5 py-3 font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {paying ? "Processing..." : "Pay Now"}
             </button>

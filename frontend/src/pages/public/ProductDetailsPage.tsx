@@ -76,68 +76,104 @@ const ProductDetailsPage = () => {
   };
 
   return (
-      <main className="mx-auto max-w-7xl px-4 py-10">
-        <div className="max-w-2xl">
-        <h2 className="text-3xl font-bold text-gray-900">
-            {product.name}
-        </h2>
-
-        <p className="mt-4 text-gray-600">
-            {product.description}
-        </p>
-
-        <p className="mt-6 text-2xl font-bold text-green-700">
-            ₹{product.price}
-        </p>
-
-        <p className="mt-2 text-sm text-gray-500">
-            Stock: {product.stock}
-        </p>
-
-        <div className="mt-6 flex items-center gap-3">
-            <label
-              htmlFor="quantity"
-              className="text-sm font-medium text-gray-700"
-            >
-              Quantity
-            </label>
-
-            <input
-            id="quantity"
-            type="number"
-            min={1}
-            max={product.stock}
-            value={quantity}
-            onChange={(event) =>
-                setQuantity(Number(event.target.value))
-            }
-            className="w-20 rounded-md border border-gray-300 px-3 py-2"
+    <main className="mx-auto max-w-7xl px-4 py-10">
+      <div className="grid gap-10 md:grid-cols-2">
+        {/* Product Image */}
+        <div className="overflow-hidden rounded-lg bg-gray-100">
+          {product.imageUrl ? (
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="aspect-square h-full w-full object-cover"
             />
+          ) : (
+            <div className="flex aspect-square items-center justify-center text-gray-500">
+              No image available
+            </div>
+          )}
         </div>
 
-        {cartMessage && (
+        {/* Product Information */}
+        <div className="flex flex-col justify-center">
+          <p className="text-sm font-medium text-green-700">
+            {product.category}
+          </p>
+
+          <h2 className="mt-2 text-3xl font-bold text-gray-900">
+            {product.name}
+          </h2>
+
+          <p className="mt-4 leading-7 text-gray-600">
+            {product.description}
+          </p>
+
+          <p className="mt-6 text-2xl font-bold text-green-700">
+            ₹{product.price}
+          </p>
+
+          <p
+            className={`mt-2 text-sm font-medium ${
+              product.stock > 0
+                ? "text-gray-500"
+                : "text-red-600"
+            }`}
+          >
+            {product.stock > 0
+              ? `${product.stock} in stock`
+              : "Out of stock"}
+          </p>
+
+          {product.stock > 0 && (
+            <div className="mt-6 flex items-center gap-3">
+              <label
+                htmlFor="quantity"
+                className="text-sm font-medium text-gray-700"
+              >
+                Quantity
+              </label>
+
+              <input
+                id="quantity"
+                type="number"
+                min={1}
+                max={product.stock}
+                value={quantity}
+                onChange={(event) => {
+                  const value = Number(event.target.value);
+
+                  if (value >= 1 && value <= product.stock) {
+                    setQuantity(value);
+                  }
+                }}
+                className="w-20 rounded-md border border-gray-300 px-3 py-2"
+              />
+            </div>
+          )}
+
+          {cartMessage && (
             <p className="mt-4 text-sm text-green-600">
-            {cartMessage}
+              {cartMessage}
             </p>
-        )}
+          )}
 
-        {cartError && (
+          {cartError && (
             <p className="mt-4 text-sm text-red-600">
-            {cartError}
+              {cartError}
             </p>
-        )}
+          )}
 
-        <button
+          <button
             type="button"
             onClick={handleAddToCart}
             disabled={addingToCart || product.stock === 0}
-            className="mt-6 rounded-md bg-green-700 px-6 py-3 font-medium text-white hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-50"
-        >
+            className="mt-6 w-fit rounded-md bg-green-700 px-6 py-3 font-medium text-white hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-50"
+          >
             {addingToCart ? "Adding..." : "Add to Cart"}
-        </button>
+          </button>
         </div>
-      </main>
-    );
+      </div>
+    </main>
+  );
 };
 
 export { ProductDetailsPage };
