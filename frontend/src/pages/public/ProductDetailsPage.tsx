@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { getProductById } from "../../api/ProductApi";
+import { useAuth } from "../../context/AuthContext";
 import { addToCart } from "../../api/cartApi";
 import type { Product } from "../../types/product";
 
 const ProductDetailsPage = () => {
   const { productId } = useParams<{ productId: string }>();
+  const navigate = useNavigate();
+  const {isAuthenticated} = useAuth();
 
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
@@ -15,6 +18,7 @@ const ProductDetailsPage = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -56,24 +60,29 @@ const ProductDetailsPage = () => {
       );
     }
 
-  const handleAddToCart = async () => {
-    setAddingToCart(true);
-    setCartMessage("");
-    setCartError("");
+    const handleAddToCart = async () => {
+      if (!isAuthenticated) {
+        navigate("/login");
+        return;
+      }
 
-    try {
+      setAddingToCart(true);
+      setCartMessage("");
+      setCartError("");
+
+      try {
         await addToCart({
-        productId: product.id,
-        quantity,
+          productId: product.id,
+          quantity,
         });
 
         setCartMessage("Product added to cart.");
-    } catch {
+      } catch {
         setCartError("Failed to add product to cart.");
-    } finally {
+      } finally {
         setAddingToCart(false);
-    }
-  };
+      }
+    };
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10">
