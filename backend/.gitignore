@@ -33,5 +33,6 @@ build/
 .vscode/
 
 **/application-local.properties
+**/application-prod.properties
 
 

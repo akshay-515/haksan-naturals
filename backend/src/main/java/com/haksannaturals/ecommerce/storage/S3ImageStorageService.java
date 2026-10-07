@@ -1,26 +1,27 @@
 package com.haksannaturals.ecommerce.storage;
 
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.util.UUID;
 
 @Service
-@Profile("local")
+@Profile("prod")
 @RequiredArgsConstructor
-public class MinioImageStorageService implements ImageStorageService {
+public class S3ImageStorageService implements ImageStorageService {
 
-    private final MinioClient minioClient;
+    private final S3Client s3Client;
 
-    @Value("${minio.url}")
-    private String minioUrl;
+//    private final String bucketName =
+//            "haksan-naturals-products-image-upload";
 
-    @Value("${minio.bucket}")
+    @Value("${aws.s3.bucket}")
     private String bucketName;
 
     @Override
@@ -38,24 +39,25 @@ public class MinioImageStorageService implements ImageStorageService {
 
             String objectName = UUID.randomUUID() + extension;
 
-            minioClient.putObject(
-                    PutObjectArgs.builder()
-                            .bucket(bucketName)
-                            .object(objectName)
-                            .stream(
-                                    file.getInputStream(),
-                                    file.getSize(),
-                                    -1L
-                            )
-                            .contentType(file.getContentType())
-                            .build()
+            PutObjectRequest request = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(objectName)
+                    .contentType(file.getContentType())
+                    .build();
+
+            s3Client.putObject(
+                    request,
+                    RequestBody.fromInputStream(
+                            file.getInputStream(),
+                            file.getSize()
+                    )
             );
 
-            return minioUrl + "/" + bucketName + "/" + objectName;
+            return "s3://" + bucketName + "/" + objectName;
 
         } catch (Exception exception) {
             throw new RuntimeException(
-                    "Failed to upload image",
+                    "Failed to upload image to S3",
                     exception
             );
         }
@@ -63,6 +65,6 @@ public class MinioImageStorageService implements ImageStorageService {
 
     @Override
     public void delete(String imageUrl) {
-        // Delete implementation will be added after upload is tested.
+        // Delete implementation will be added later.
     }
 }
