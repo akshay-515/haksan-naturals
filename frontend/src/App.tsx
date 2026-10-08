@@ -1,24 +1,17 @@
-import { useEffect } from "react";
-import { apiClient } from "./api/client";
 import { Navbar } from "./components/layout/Navbar";
+import { Footer } from "./components/layout/Footer";
 import { AppRoutes } from "./routes/AppRoutes";
 
 const App = () => {
-  useEffect(() => {
-    const testBackend = async () => {
-      const response = await apiClient.get("/api/products");
-
-      console.log("Backend response:", response.data);
-    };
-
-    testBackend();
-  }, []);
-
   return (
-    <div className="min-h-screen bg-white">
+    <div className="flex min-h-screen flex-col bg-white">
       <Navbar />
 
-      <AppRoutes />
+      <div className="flex-1">
+        <AppRoutes />
+      </div>
+
+      <Footer />
     </div>
   );
 };

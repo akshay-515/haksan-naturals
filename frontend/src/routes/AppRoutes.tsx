@@ -17,6 +17,7 @@ import { AdminDashboardPage } from "../components/admin/AdminDashboardPage";
 import { AdminProductsPage } from "../components/admin/AdminProductsPage";
 import { AdminProductFormPage } from "../components/admin/AdminProductFormPage";
 import { AdminProductEditPage } from "../components/admin/AdminProductEditPage";
+import { AdminOrdersPage } from "../components/admin/AdminOrdersPage";
 
 const AppRoutes = () => {
   return (
@@ -43,6 +44,7 @@ const AppRoutes = () => {
         <Route element={<AdminLayout />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/products" element={<AdminProductsPage />} />
+          <Route path="/admin/orders" element={<AdminOrdersPage />} />
           <Route path="/admin/products/new" element={<AdminProductFormPage />} />
           <Route path="/admin/products/:productId/edit" element={<AdminProductEditPage />} />
         </Route>
