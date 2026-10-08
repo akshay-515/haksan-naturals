@@ -34,5 +34,5 @@ build/
 
 **/application-local.properties
 **/application-prod.properties
-
+**/.env.docker-test
 
