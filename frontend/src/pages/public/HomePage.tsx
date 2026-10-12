@@ -4,6 +4,8 @@ import { ArrowRight, Leaf, ShieldCheck, Sparkles } from "lucide-react";
 import { getProducts } from "../../api/ProductApi";
 import type { Product } from "../../types/product";
 import { ProductCard } from "../../components/product/ProductCard";
+import logoMark from "../../assets/haksan-logo-mark.png";
+import logo from "../../assets/haksan-logo.jpeg";
 
 const HomePage = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -34,7 +36,7 @@ const HomePage = () => {
           <div>
             <div className="mb-6 flex items-center gap-3">
               <img
-                src="src/assets/haksan-logo-mark.png"
+                src={logoMark}
                 alt="Haksan Naturals"
                 className="h-14 w-14 object-contain"
               />
@@ -92,7 +94,7 @@ const HomePage = () => {
 
               <div className="relative flex h-full w-full items-center justify-center rounded-2xl bg-white/70 p-8 shadow-sm backdrop-blur">
                 <img
-                  src="src/assets/haksan-logo.jpeg"
+                  src={logo}
                   alt="Haksan Naturals"
                   className="h-full w-full object-contain"
                 />

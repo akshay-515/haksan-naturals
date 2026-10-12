@@ -7,6 +7,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import logoMark from "../../assets/haksan-logo-mark.png";
 
 const Navbar = () => {
   const { isAuthenticated, logout } = useAuth();
@@ -34,7 +35,7 @@ const Navbar = () => {
           className="flex items-center gap-3"
         >
           <img
-            src="/src/assets/haksan-logo-mark.png"
+            src={logoMark}
             alt="Haksan Naturals"
             className="h-12 w-12 object-contain"
           />

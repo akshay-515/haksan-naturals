@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Leaf, Mail } from "lucide-react";
+import logoMark from "../../assets/haksan-logo-mark.png"
 
 const Footer = () => {
   return (
@@ -12,7 +13,7 @@ const Footer = () => {
           <div className="lg:col-span-2">
             <Link to="/" className="inline-flex items-center gap-3">
               <img
-                src="src/assets/haksan-logo-mark.png"
+                src={logoMark}
                 alt="Haksan Naturals"
                 className="h-12 w-12 object-contain"
               />
