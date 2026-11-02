@@ -18,6 +18,7 @@ import { AdminProductsPage } from "../components/admin/AdminProductsPage";
 import { AdminProductFormPage } from "../components/admin/AdminProductFormPage";
 import { AdminProductEditPage } from "../components/admin/AdminProductEditPage";
 import { AdminOrdersPage } from "../components/admin/AdminOrdersPage";
+import { GoogleCallbackPage } from "../pages/public/GoogleCallbackPage";
 
 const AppRoutes = () => {
   return (
@@ -27,6 +28,10 @@ const AppRoutes = () => {
       <Route
         path="/products/:productId"
         element={<ProductDetailsPage />}
+      />
+      <Route
+        path="/auth/google/callback"
+        element={<GoogleCallbackPage />}
       />
       <Route path="/login" element={<LoginPage />} />
 

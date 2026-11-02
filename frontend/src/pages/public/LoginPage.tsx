@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Leaf, ShieldCheck } from "lucide-react";
+import { Leaf, ShieldCheck, Globe } from "lucide-react";
 import { OtpLoginForm } from "../../components/auth/OtpLoginForm";
 
 const LoginPage = () => {
@@ -44,7 +44,16 @@ const LoginPage = () => {
 
           <div className="mt-7">
             <OtpLoginForm />
+            <a
+              href={`${import.meta.env.VITE_API_URL}/oauth2/authorization/google`}
+              className="mt-3 flex w-full items-center justify-center gap-3 rounded-xl border border-gray-300 bg-white px-4 py-3 font-semibold text-gray-700 transition hover:bg-gray-50"
+            >
+              <Globe size={18} />
+              Continue with Google
+            </a>
           </div>
+
+
 
           {/* Security note */}
           <div className="mt-7 flex items-start gap-3 rounded-xl bg-green-50 p-4">

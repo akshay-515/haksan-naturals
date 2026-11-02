@@ -111,6 +111,13 @@ const Footer = () => {
               >
                 Addresses
               </Link>
+
+              <Link
+               to="/admin/login"
+               className="text-sm text-green-100/70 transition hover:text-white"
+               >
+                Admin Login
+              </Link>
             </nav>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { adminLogin } from "../../api/adminAuthApi";
 import { useAuth } from "../../context/AuthContext";
@@ -9,6 +10,7 @@ const AdminLoginPage = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -82,24 +84,28 @@ const AdminLoginPage = () => {
               Password
             </label>
 
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              className="w-full rounded-md border border-gray-300 px-4 py-3 outline-none focus:border-green-600"
-              placeholder="Enter your password"
-            />
-          </div>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+                className="w-full rounded-md border border-gray-300 px-4 py-3 pr-12 outline-none focus:border-green-600"
+                placeholder="Enter your password"
+              />
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-green-600 px-5 py-3 font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
+              <button
+                type="button"
+                onClick={() => setShowPassword((previous) => !previous)}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-green-700"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+          </div>
         </form>
       </div>
     </main>
