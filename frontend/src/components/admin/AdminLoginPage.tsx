@@ -106,6 +106,13 @@ const AdminLoginPage = () => {
               </button>
             </div>
           </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-md bg-green-700 px-4 py-3 font-semibold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? "Signing in..." : "Sign In"}
+          </button>
         </form>
       </div>
     </main>

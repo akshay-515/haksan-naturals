@@ -3,19 +3,38 @@ import type { Cart, CartItem } from "../types/cart";
 
 const GUEST_CART_KEY = "haksan_guest_cart";
 
+const getEffectivePrice = (product: Product): number => {
+  const discountedPrice = product.discountedPrice;
+
+  if (
+    discountedPrice != null &&
+    discountedPrice > 0 &&
+    discountedPrice < product.price
+  ) {
+    return discountedPrice;
+  }
+
+  return product.price;
+};
+
 const createGuestCartItem = (
   product: Product,
   quantity: number
-): CartItem => ({
-  itemId: product.id,
-  productId: product.id,
-  productName: product.name,
-  price: product.price,
-  imageUrl: product.imageUrl,
-  quantity,
-  subtotal: product.price * quantity,
-  stock: product.stock,
-});
+): CartItem => {
+  const effectivePrice = getEffectivePrice(product);
+
+  return {
+    itemId: product.id,
+    productId: product.id,
+    productName: product.name,
+    price: effectivePrice,
+    originalPrice: product.price,
+    imageUrl: product.imageUrl,
+    quantity,
+    subtotal: effectivePrice * quantity,
+    stock: product.stock,
+  };
+};
 
 const buildGuestCart = (items: CartItem[]): Cart => ({
   cartId: 0,
@@ -69,19 +88,22 @@ const addGuestCartItem = (
     );
   }
 
-  const updatedItems = existingItem
-    ? cart.items.map((item) =>
-        item.productId === product.id
-          ? {
-              ...item,
-              price: product.price,
-              stock: product.stock,
-              quantity: newQuantity,
-              subtotal: product.price * newQuantity,
-            }
-          : item
-      )
-    : [...cart.items, createGuestCartItem(product, quantity)];
+const effectivePrice = getEffectivePrice(product);
+
+const updatedItems = existingItem
+  ? cart.items.map((item) =>
+      item.productId === product.id
+        ? {
+            ...item,
+            price: effectivePrice,
+            originalPrice: product.price,
+            stock: product.stock,
+            quantity: newQuantity,
+            subtotal: effectivePrice * newQuantity,
+          }
+        : item
+    )
+  : [...cart.items, createGuestCartItem(product, quantity)];
 
   return saveGuestCart(updatedItems);
 };

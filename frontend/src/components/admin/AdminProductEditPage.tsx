@@ -23,6 +23,7 @@ const AdminProductEditPage = () => {
     name: "",
     description: "",
     price: 0,
+    discountedPrice: undefined,
     imageUrl: "",
     category: "",
     stock: 0,
@@ -57,6 +58,7 @@ const AdminProductEditPage = () => {
           name: product.name,
           description: product.description,
           price: product.price,
+          discountedPrice: product.discountedPrice ?? undefined,
           imageUrl: product.imageUrl ?? "",
           category: product.category,
           stock: product.stock,
@@ -72,9 +74,7 @@ const AdminProductEditPage = () => {
   }, [productId]);
 
   const handleChange = (
-    event: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement
-    >
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = event.target;
 
@@ -83,7 +83,11 @@ const AdminProductEditPage = () => {
       [name]:
         name === "price" || name === "stock"
           ? Number(value)
-          : value,
+          : name === "discountedPrice"
+            ? value === ""
+              ? undefined
+              : Number(value)
+            : value,
     }));
   };
 
@@ -118,6 +122,15 @@ const AdminProductEditPage = () => {
 
     setSaving(true);
     setError("");
+
+    if (
+      form.discountedPrice != null &&
+      form.discountedPrice >= form.price
+    ) {
+      setError("Discounted price must be lower than the regular price.");
+      setSaving(false);
+      return;
+    }
 
     try {
       let imageUrl = form.imageUrl;
@@ -258,14 +271,15 @@ const AdminProductEditPage = () => {
                 </p>
               </div>
 
-              {/* Price + Stock */}
-              <div className="mt-6 grid gap-5 sm:grid-cols-2">
+              {/* Price + Discounted Price + Stock */}
+              <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {/* Regular Price */}
                 <div>
                   <label
                     htmlFor="price"
                     className="mb-2 block text-sm font-medium text-gray-700"
                   >
-                    Price
+                    Regular Price
                   </label>
 
                   <div className="relative">
@@ -287,6 +301,43 @@ const AdminProductEditPage = () => {
                   </div>
                 </div>
 
+                {/* Discounted Price */}
+                <div>
+                  <label
+                    htmlFor="discountedPrice"
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
+                    Discounted Price
+                    <span className="ml-1 font-normal text-gray-400">
+                      (Optional)
+                    </span>
+                  </label>
+
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-500">
+                      ₹
+                    </span>
+
+                    <input
+                      id="discountedPrice"
+                      name="discountedPrice"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      max={form.price > 0 ? form.price - 0.01 : undefined}
+                      value={form.discountedPrice ?? ""}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-gray-300 py-3 pl-9 pr-4 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
+                      placeholder="No discount"
+                    />
+                  </div>
+
+                  <p className="mt-2 text-xs text-gray-500">
+                    Must be lower than the regular price.
+                  </p>
+                </div>
+
+                {/* Stock */}
                 <div>
                   <label
                     htmlFor="stock"
@@ -307,6 +358,34 @@ const AdminProductEditPage = () => {
                   />
                 </div>
               </div>
+
+              {/* Price Preview */}
+              {form.discountedPrice != null &&
+                form.discountedPrice > 0 &&
+                form.discountedPrice < form.price && (
+                  <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4">
+                    <p className="text-xs font-medium uppercase tracking-wide text-green-700">
+                      Discount Preview
+                    </p>
+
+                    <div className="mt-2 flex flex-wrap items-center gap-3">
+                      <span className="text-xl font-bold text-green-800">
+                        ₹{form.discountedPrice.toFixed(2)}
+                      </span>
+
+                      <span className="text-sm text-gray-500 line-through">
+                        ₹{form.price.toFixed(2)}
+                      </span>
+
+                      <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
+                        {Math.round(
+                          ((form.price - form.discountedPrice) / form.price) * 100
+                        )}
+                        % OFF
+                      </span>
+                    </div>
+                  </div>
+                )}
 
               {/* Category */}
               <div className="mt-6">

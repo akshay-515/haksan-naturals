@@ -6,6 +6,18 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
+
+  const hasDiscount =
+    product.discountedPrice != null &&
+    product.discountedPrice > 0 &&
+    product.discountedPrice < product.price;
+
+  const discountPercentage = hasDiscount
+    ? Math.round(
+        ((product.price - product.discountedPrice!) / product.price) * 100
+      )
+    : 0;
+
   return (
     <Link
       to={`/products/${product.id}`}
@@ -41,16 +53,34 @@ const ProductCard = ({ product }: ProductCardProps) => {
           {product.description}
         </p>
 
-        <div className="mt-3 flex items-center justify-between sm:mt-4">
-          <p className="text-base font-bold text-green-700 sm:text-lg">
-            ₹{product.price}
-          </p>
+        <div className="mt-3 flex items-end justify-between gap-2 sm:mt-4">
+          <div className="min-w-0">
+            {hasDiscount ? (
+              <>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-base font-bold text-green-700 sm:text-lg">
+                    ₹{product.discountedPrice!.toFixed(2)}
+                  </p>
+
+                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700 sm:text-xs">
+                    {discountPercentage}% OFF
+                  </span>
+                </div>
+
+                <p className="mt-1 text-xs text-gray-500 line-through sm:text-sm">
+                  ₹{product.price.toFixed(2)}
+                </p>
+              </>
+            ) : (
+              <p className="text-base font-bold text-green-700 sm:text-lg">
+                ₹{product.price.toFixed(2)}
+              </p>
+            )}
+          </div>
 
           <p
-            className={`hidden text-xs font-medium sm:block ${
-              product.stock > 0
-                ? "text-gray-500"
-                : "text-red-600"
+            className={`hidden shrink-0 text-xs font-medium sm:block ${
+              product.stock > 0 ? "text-gray-500" : "text-red-600"
             }`}
           >
             {product.stock > 0

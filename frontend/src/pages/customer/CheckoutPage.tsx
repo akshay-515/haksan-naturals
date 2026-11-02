@@ -140,6 +140,15 @@ const CheckoutPage = () => {
     );
   }
 
+  // Calculate savings only after confirming cart exists
+  const totalSavings = cart.items.reduce((total, item) => {
+    if (item.originalPrice && item.originalPrice > item.price) {
+      return total + (item.originalPrice - item.price) * item.quantity;
+    }
+
+    return total;
+  }, 0);
+
   return (
     <main className="bg-gray-50">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
@@ -351,13 +360,26 @@ const CheckoutPage = () => {
                         {item.productName}
                       </h3>
 
-                      <p className="mt-1 text-sm text-gray-500">
-                        {item.quantity} × ₹{item.price}
-                      </p>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-sm">
+                        <span className="text-gray-500">
+                          {item.quantity} ×
+                        </span>
+
+                        <span className="font-medium text-green-700">
+                          ₹{item.price.toFixed(2)}
+                        </span>
+
+                        {item.originalPrice != null &&
+                          item.originalPrice > item.price && (
+                            <span className="text-gray-500 line-through">
+                              ₹{item.originalPrice.toFixed(2)}
+                            </span>
+                          )}
+                      </div>
                     </div>
 
                     <p className="shrink-0 font-semibold text-gray-900">
-                      ₹{item.subtotal}
+                      ₹{item.subtotal.toFixed(2)}
                     </p>
                   </div>
                 ))}
@@ -373,9 +395,7 @@ const CheckoutPage = () => {
 
             <div className="mt-5 space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">
-                  Items
-                </span>
+                <span className="text-gray-600">Items</span>
 
                 <span className="font-medium text-gray-900">
                   {cart.items.length}
@@ -383,14 +403,22 @@ const CheckoutPage = () => {
               </div>
 
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">
-                  Subtotal
-                </span>
+                <span className="text-gray-600">Subtotal</span>
 
                 <span className="font-medium text-gray-900">
-                  ₹{cart.totalAmount}
+                  ₹{cart.totalAmount.toFixed(2)}
                 </span>
               </div>
+
+              {totalSavings > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-green-700">You saved</span>
+
+                  <span className="font-semibold text-green-700">
+                    −₹{totalSavings.toFixed(2)}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="my-5 border-t border-gray-100" />
@@ -401,9 +429,15 @@ const CheckoutPage = () => {
               </span>
 
               <span className="text-2xl font-bold text-green-700">
-                ₹{cart.totalAmount}
+                ₹{cart.totalAmount.toFixed(2)}
               </span>
             </div>
+
+            {totalSavings > 0 && (
+              <p className="mt-2 text-right text-xs font-medium text-green-700">
+                You're saving ₹{totalSavings.toFixed(2)} on this order!
+              </p>
+            )}
 
             <button
               type="button"

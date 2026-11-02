@@ -239,13 +239,30 @@ const CartPage = () => {
                             {item.productName}
                           </button>
 
-                          <p className="mt-1 text-sm text-gray-500">
-                            ₹{item.price} each
-                          </p>
+                          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm">
+                            {item.originalPrice != null &&
+                            item.originalPrice > item.price ? (
+                              <>
+                                <span className="font-semibold text-green-700">
+                                  ₹{item.price.toFixed(2)}
+                                </span>
+
+                                <span className="text-gray-500 line-through">
+                                  ₹{item.originalPrice.toFixed(2)}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-gray-500">
+                                ₹{item.price.toFixed(2)}
+                              </span>
+                            )}
+
+                            <span className="text-gray-500">each</span>
+                          </div>
                         </div>
 
                         <p className="text-base font-bold text-green-700 sm:text-lg">
-                          ₹{item.subtotal}
+                          ₹{item.subtotal.toFixed(2)}
                         </p>
                       </div>
 

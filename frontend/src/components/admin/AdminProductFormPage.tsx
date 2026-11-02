@@ -35,7 +35,11 @@ const AdminProductFormPage = () => {
       [name]:
         name === "price" || name === "stock"
           ? Number(value)
-          : value,
+          : name === "discountedPrice"
+            ? value === ""
+              ? undefined
+              : Number(value)
+            : value,
     }));
   };
 
@@ -170,7 +174,7 @@ const AdminProductFormPage = () => {
               </div>
 
               {/* Price + Stock */}
-              <div className="mt-6 grid gap-5 sm:grid-cols-2">
+              <div className="mt-6 grid gap-5 sm:grid-cols-3">
                 <div>
                   <label
                     htmlFor="price"
@@ -196,6 +200,41 @@ const AdminProductFormPage = () => {
                       className="w-full rounded-xl border border-gray-300 py-3 pl-9 pr-4 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
                     />
                   </div>
+
+                  <div>
+                    <label
+                      htmlFor="discountedPrice"
+                      className="mb-2 block text-sm font-medium text-gray-700"
+                    >
+                      Discounted Price
+                      <span className="ml-1 font-normal text-gray-400">
+                        (Optional)
+                      </span>
+                    </label>
+
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-500">
+                        ₹
+                      </span>
+
+                      <input
+                        id="discountedPrice"
+                        name="discountedPrice"
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        max={form.price > 0 ? form.price - 0.01 : undefined}
+                        value={form.discountedPrice ?? ""}
+                        onChange={handleChange}
+                        placeholder="No discount"
+                        className="w-full rounded-xl border border-gray-300 py-3 pl-9 pr-4 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
+                      />
+                    </div>
+
+                    <p className="mt-2 text-xs text-gray-500">
+                      Must be lower than the original price.
+                    </p>
+                  </div>
                 </div>
 
                 <div>
@@ -219,6 +258,38 @@ const AdminProductFormPage = () => {
                   />
                 </div>
               </div>
+
+              {form.discountedPrice !== undefined &&
+                form.discountedPrice > 0 &&
+                form.discountedPrice < form.price && (
+                  <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-green-700">
+                      Discount Preview
+                    </p>
+
+                    <div className="mt-2 flex flex-wrap items-baseline gap-3">
+                      <span className="text-xl font-bold text-green-800">
+                        ₹{form.discountedPrice.toFixed(2)}
+                      </span>
+
+                      <span className="text-sm text-gray-500 line-through">
+                        ₹{form.price.toFixed(2)}
+                      </span>
+
+                      <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
+                        {Math.round(
+                          ((form.price - form.discountedPrice) / form.price) * 100
+                        )}
+                        % OFF
+                      </span>
+                    </div>
+
+                    <p className="mt-1 text-sm text-green-700">
+                      Customer saves ₹
+                      {(form.price - form.discountedPrice).toFixed(2)} per item.
+                    </p>
+                  </div>
+                )}
 
               {/* Category */}
               <div className="mt-6">

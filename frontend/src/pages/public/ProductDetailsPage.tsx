@@ -61,6 +61,17 @@ const ProductDetailsPage = () => {
       );
     }
 
+  const hasDiscount =
+    product.discountedPrice != null &&
+    product.discountedPrice > 0 &&
+    product.discountedPrice < product.price;
+
+  const discountPercentage = hasDiscount
+    ? Math.round(
+        ((product.price - product.discountedPrice!) / product.price) * 100
+      )
+    : 0;
+
   const handleAddToCart = async () => {
     setAddingToCart(true);
     setCartMessage("");
@@ -114,9 +125,35 @@ const ProductDetailsPage = () => {
             {product.description}
           </p>
 
-          <p className="mt-6 text-2xl font-bold text-green-700">
-            ₹{product.price}
-          </p>
+        {/* Product Price */}
+          <div className="mt-6">
+            {hasDiscount ? (
+              <>
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="text-3xl font-bold text-green-700">
+                    ₹{product.discountedPrice!.toFixed(2)}
+                  </p>
+
+                  <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-700">
+                    {discountPercentage}% OFF
+                  </span>
+                </div>
+
+                <p className="mt-2 text-lg text-gray-500 line-through">
+                  ₹{product.price.toFixed(2)}
+                </p>
+
+                <p className="mt-2 text-sm font-medium text-green-700">
+                  You save ₹
+                  {(product.price - product.discountedPrice!).toFixed(2)}
+                </p>
+              </>
+            ) : (
+              <p className="text-2xl font-bold text-green-700">
+                ₹{product.price.toFixed(2)}
+              </p>
+            )}
+          </div>
 
           <p
             className={`mt-2 text-sm font-medium ${
