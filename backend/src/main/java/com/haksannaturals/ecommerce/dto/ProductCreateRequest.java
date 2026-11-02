@@ -1,9 +1,6 @@
 package com.haksannaturals.ecommerce.dto;
 
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,6 +17,16 @@ public class ProductCreateRequest {
     @NotNull(message = "Price is required")
     @DecimalMin(value = "0.01", message = "Price must be greater than 0")
     private BigDecimal price;
+
+    @DecimalMin(value = "0.01", message = "Discounted price must be greater than 0")
+    private BigDecimal discountedPrice;
+
+    @AssertTrue(message = "Discounted price must be less than the original price")
+    public boolean isDiscountedPriceValid() {
+        return discountedPrice == null
+                || price == null
+                || discountedPrice.compareTo(price) < 0;
+    }
 
     @NotBlank(message = "Image URL is required")
     private String imageUrl;

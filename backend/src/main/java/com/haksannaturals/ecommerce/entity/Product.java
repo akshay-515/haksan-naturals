@@ -28,6 +28,9 @@ public class Product {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
+    @Column(name = "discounted_price", precision = 10, scale = 2)
+    private BigDecimal discountedPrice;
+
     @Column(name = "image_url", length = 500)
     private String imageUrl;
 
