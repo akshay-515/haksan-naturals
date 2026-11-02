@@ -14,6 +14,7 @@ interface AuthContextValue {
   token: string | null;
   user: JwtPayload | null;
   isAuthenticated: boolean;
+  isAuthReady: boolean;
   login: (token: string) => void;
   logout: () => Promise<void>;
 }
@@ -27,6 +28,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(
 );
 
 const AuthProvider = ({ children }: AuthProviderProps) => {
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const [token, setToken] = useState<string | null>(() => {
     return localStorage.getItem("token");
   });
@@ -36,6 +38,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     if (!token) {
       setUser(null);
+      setIsAuthReady(true);
       return;
     }
 
@@ -46,14 +49,17 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
         localStorage.removeItem("token");
         setToken(null);
         setUser(null);
+        setIsAuthReady(true);
         return;
       }
 
       setUser(decodedToken);
+      setIsAuthReady(true);
     } catch {
       localStorage.removeItem("token");
       setToken(null);
       setUser(null);
+      setIsAuthReady(true);
     }
   }, [token]);
 
@@ -83,6 +89,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
         token,
         user,
         isAuthenticated,
+        isAuthReady,
         login,
         logout,
       }}
