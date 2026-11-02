@@ -6,6 +6,7 @@ interface CartItem {
   imageUrl: string | null;
   quantity: number;
   subtotal: number;
+  stock?: number;
 }
 
 interface Cart {

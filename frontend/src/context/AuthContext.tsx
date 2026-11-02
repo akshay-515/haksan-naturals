@@ -5,6 +5,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { getCart } from "../api/cartApi";
+import { saveCartAsGuestCart } from "../utils/guestCart";
 import { jwtDecode } from "jwt-decode";
 import type { JwtPayload } from "../types/auth";
 
@@ -13,7 +15,7 @@ interface AuthContextValue {
   user: JwtPayload | null;
   isAuthenticated: boolean;
   login: (token: string) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 interface AuthProviderProps {
@@ -60,10 +62,17 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     setToken(newToken);
   };
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    setToken(null);
-    setUser(null);
+  const logout = async () => {
+    try {
+      const cart = await getCart();
+      saveCartAsGuestCart(cart);
+    } catch (error) {
+      console.error("Failed to preserve cart before logout:", error);
+    } finally {
+      localStorage.removeItem("token");
+      setToken(null);
+      setUser(null);
+    }
   };
 
   const isAuthenticated = token !== null && user !== null;

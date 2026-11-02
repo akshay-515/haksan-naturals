@@ -1,13 +1,21 @@
 
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { apiClient } from "../../api/client";
+import { mergeGuestCartIntoAccount } from "../../api/cartApi";
 import { useAuth } from "../../context/AuthContext";
 
 const GoogleCallbackPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+
+  const from = location.state?.from;
+
+  const redirectTo = from
+    ? `${from.pathname}${from.search ?? ""}${from.hash ?? ""}`
+    : "/products";
 
   const [error, setError] = useState("");
   const started = useRef(false);
@@ -42,14 +50,17 @@ const GoogleCallbackPage = () => {
 
         login(response.data.token);
 
-        // Remove the one-time code from the browser address bar.
+        await mergeGuestCartIntoAccount();
+
         window.history.replaceState(
           {},
           document.title,
           window.location.pathname
         );
 
-        navigate("/products", { replace: true });
+navigate(redirectTo, { replace: true });
+
+        navigate(redirectTo, { replace: true });
       } catch {
         setError(
           "Google sign-in could not be completed. Please try again."
@@ -58,7 +69,7 @@ const GoogleCallbackPage = () => {
     };
 
     void exchangeCode();
-  }, [searchParams, login, navigate]);
+  }, [searchParams, login, navigate, redirectTo]);
 
   if (error) {
     return (

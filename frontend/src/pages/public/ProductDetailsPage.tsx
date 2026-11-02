@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getProductById } from "../../api/ProductApi";
 import { useAuth } from "../../context/AuthContext";
 import { addToCart } from "../../api/cartApi";
+import { addGuestCartItem } from "../../utils/guestCart";
 import type { Product } from "../../types/product";
 
 const ProductDetailsPage = () => {
@@ -60,29 +61,26 @@ const ProductDetailsPage = () => {
       );
     }
 
-    const handleAddToCart = async () => {
+  const handleAddToCart = async () => {
+    setAddingToCart(true);
+    setCartMessage("");
+    setCartError("");
+
+    try {
       if (!isAuthenticated) {
-        navigate("/login");
+        addGuestCartItem(product, quantity);
+        setCartMessage("Product added to cart.");
         return;
       }
 
-      setAddingToCart(true);
-      setCartMessage("");
-      setCartError("");
-
-      try {
-        await addToCart({
-          productId: product.id,
-          quantity,
-        });
-
-        setCartMessage("Product added to cart.");
-      } catch {
-        setCartError("Failed to add product to cart.");
-      } finally {
-        setAddingToCart(false);
-      }
-    };
+      await addToCart({ productId: product.id, quantity });
+      setCartMessage("Product added to cart.");
+    } catch {
+      setCartError("Failed to add product to cart.");
+    } finally {
+      setAddingToCart(false);
+    }
+  };
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10">
