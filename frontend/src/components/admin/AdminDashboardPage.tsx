@@ -1,37 +1,71 @@
+import { useEffect, useState } from "react";
 import {
-  DollarSign,
+  IndianRupee,
   Package,
   ShoppingCart,
   Clock,
   ArrowRight,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import {
+  getDashboardStats,
+  type AdminDashboardResponse,
+} from "../../api/adminDashboardApi";
+
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 2,
+  }).format(amount);
 
 const AdminDashboardPage = () => {
+  const [dashboard, setDashboard] =
+    useState<AdminDashboardResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const data = await getDashboardStats();
+        setDashboard(data);
+      } catch {
+        setError("Unable to load dashboard data. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboard();
+  }, []);
+
   const stats = [
     {
       label: "Total Orders",
-      value: "—",
+      value: dashboard ? dashboard.totalOrders.toLocaleString("en-IN") : "—",
       icon: ShoppingCart,
       description: "All customer orders",
     },
     {
       label: "Total Products",
-      value: "—",
+      value: dashboard ? dashboard.totalProducts.toLocaleString("en-IN") : "—",
       icon: Package,
       description: "Products in your store",
     },
     {
       label: "Pending Orders",
-      value: "—",
+      value: dashboard
+        ? dashboard.pendingOrders.toLocaleString("en-IN")
+        : "—",
       icon: Clock,
       description: "Orders awaiting processing",
     },
     {
       label: "Revenue",
-      value: "—",
-      icon: DollarSign,
-      description: "Total store revenue",
+      value: dashboard ? formatCurrency(dashboard.totalRevenue) : "—",
+      icon: IndianRupee,
+      description: "Revenue from successful payments",
     },
   ];
 
@@ -47,6 +81,22 @@ const AdminDashboardPage = () => {
           Overview of your Haksan Naturals store.
         </p>
       </div>
+
+      {/* Loading and Error States */}
+      {loading && (
+        <p className="mb-4 text-sm text-gray-500">
+          Loading dashboard data...
+        </p>
+      )}
+
+      {error && (
+        <div
+          role="alert"
+          className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+          {error}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">

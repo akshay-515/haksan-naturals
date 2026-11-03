@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import logoMark from "../../assets/haksan-logo-mark.png";
 
 const AdminLayout = () => {
   const { logout } = useAuth();
@@ -66,7 +67,7 @@ const AdminLayout = () => {
           onClick={closeMobileMenu}
         >
           <img
-            src="src/assets/haksan-logo-mark.png"
+            src={logoMark}
             alt="Haksan Naturals"
             className="h-9 w-9 object-contain"
           />

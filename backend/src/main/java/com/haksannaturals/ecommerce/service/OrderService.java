@@ -140,6 +140,7 @@ public class OrderService {
                     .order(savedOrder)
                     .product(product)
                     .quantity(cartItem.getQuantity())
+                    .originalPrice(product.getPrice())
                     .price(effectivePrice)
                     .build();
 
@@ -180,6 +181,7 @@ public class OrderService {
                         .id(item.getId())
                         .productId(item.getProduct().getId())
                         .productName(item.getProduct().getName())
+                        .originalPrice(item.getOriginalPrice())
                         .price(item.getPrice())
                         .quantity(item.getQuantity())
                         .subtotal(

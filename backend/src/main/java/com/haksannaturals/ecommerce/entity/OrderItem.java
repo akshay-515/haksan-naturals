@@ -30,5 +30,8 @@ public class OrderItem {
     private Integer quantity;
 
     @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal originalPrice;
+
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 }
