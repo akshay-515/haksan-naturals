@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Leaf, ShieldCheck, Globe } from "lucide-react";
 import { OtpLoginForm } from "../../components/auth/OtpLoginForm";
+import logoMark from "../../assets/haksan-logo-mark.png";
 
 const LoginPage = () => {
   return (
@@ -14,7 +15,7 @@ const LoginPage = () => {
             className="inline-flex flex-col items-center"
           >
             <img
-              src="src/assets/haksan-logo-mark.png"
+              src={logoMark}
               alt="Haksan Naturals"
               className="h-16 w-16 object-contain"
             />
