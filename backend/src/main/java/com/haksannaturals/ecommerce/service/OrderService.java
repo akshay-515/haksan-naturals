@@ -33,6 +33,19 @@ public class OrderService {
     private final AddressRepository addressRepository;
     private final CurrentUserService currentUserService;
 
+    private BigDecimal getEffectivePrice(Product product) {
+        BigDecimal discountedPrice = product.getDiscountedPrice();
+        BigDecimal originalPrice = product.getPrice();
+
+        if (discountedPrice != null
+                && discountedPrice.compareTo(BigDecimal.ZERO) > 0
+                && discountedPrice.compareTo(originalPrice) < 0) {
+            return discountedPrice;
+        }
+
+        return originalPrice;
+    }
+
     @Transactional
     public OrderResponse createOrder(OrderCreateRequest request) {
 
@@ -86,10 +99,11 @@ public class OrderService {
                 );
             }
 
-            BigDecimal itemTotal = product.getPrice()
-                    .multiply(
-                            BigDecimal.valueOf(cartItem.getQuantity())
-                    );
+            BigDecimal effectivePrice = getEffectivePrice(product);
+
+            BigDecimal itemTotal = effectivePrice.multiply(
+                    BigDecimal.valueOf(cartItem.getQuantity())
+            );
 
             totalAmount = totalAmount.add(itemTotal);
         }
@@ -120,11 +134,14 @@ public class OrderService {
 
             Product product = cartItem.getProduct();
 
+            BigDecimal effectivePrice = getEffectivePrice(product);
+
             OrderItem orderItem = OrderItem.builder()
                     .order(savedOrder)
                     .product(product)
                     .quantity(cartItem.getQuantity())
-                    .price(product.getPrice())
+                    .originalPrice(product.getPrice())
+                    .price(effectivePrice)
                     .build();
 
             orderItems.add(orderItem);
@@ -164,6 +181,7 @@ public class OrderService {
                         .id(item.getId())
                         .productId(item.getProduct().getId())
                         .productName(item.getProduct().getName())
+                        .originalPrice(item.getOriginalPrice())
                         .price(item.getPrice())
                         .quantity(item.getQuantity())
                         .subtotal(

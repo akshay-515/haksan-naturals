@@ -36,6 +36,19 @@ public class CartService {
                 .orElseGet(() -> createCart(userId));
     }
 
+    private BigDecimal getEffectivePrice(Product product) {
+        BigDecimal discountedPrice = product.getDiscountedPrice();
+        BigDecimal originalPrice = product.getPrice();
+
+        if (discountedPrice != null
+                && discountedPrice.compareTo(BigDecimal.ZERO) > 0
+                && discountedPrice.compareTo(originalPrice) < 0) {
+            return discountedPrice;
+        }
+
+        return originalPrice;
+    }
+
     public CartResponse getCartResponse() {
 
         Cart cart = getOrCreateCart();
@@ -46,16 +59,18 @@ public class CartService {
 
                     Product product = item.getProduct();
 
-                    BigDecimal subtotal = product.getPrice()
-                            .multiply(
-                                    BigDecimal.valueOf(item.getQuantity())
-                            );
+                    BigDecimal effectivePrice = getEffectivePrice(product);
+
+                    BigDecimal subtotal = effectivePrice.multiply(
+                            BigDecimal.valueOf(item.getQuantity())
+                    );
 
                     return CartItemResponse.builder()
                             .itemId(item.getId())
                             .productId(product.getId())
                             .productName(product.getName())
-                            .price(product.getPrice())
+                            .price(effectivePrice)
+                            .originalPrice(product.getPrice())
                             .imageUrl(product.getImageUrl())
                             .quantity(item.getQuantity())
                             .subtotal(subtotal)

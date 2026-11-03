@@ -254,6 +254,13 @@ const OrderDetailsPage = () => {
   const isPaymentPending = order.paymentStatus === "PENDING";
   const isPaymentSuccessful = order.paymentStatus === "SUCCESS";
 
+  const totalSavings = order.items.reduce(
+  (total, item) =>
+    total +
+    Math.max(0, item.originalPrice - item.price) * item.quantity,
+  0,
+);
+
   return (
     <main className="bg-gray-50">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
@@ -400,26 +407,46 @@ const OrderDetailsPage = () => {
               </div>
 
               <div className="mt-5 divide-y divide-gray-100">
-                {order.items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between gap-5 py-4 first:pt-0 last:pb-0"
-                  >
-                    <div className="min-w-0">
-                      <h3 className="font-medium text-gray-900">
-                        {item.productName}
-                      </h3>
+                {order.items.map((item) => {
+                  const hasDiscount = item.originalPrice > item.price;
+                  const itemSavings =
+                    (item.originalPrice - item.price) * item.quantity;
 
-                      <p className="mt-1 text-sm text-gray-500">
-                        ₹{item.price} × {item.quantity}
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between gap-5 py-4 first:pt-0 last:pb-0"
+                    >
+                      <div className="min-w-0">
+                        <h3 className="font-medium text-gray-900">
+                          {item.productName}
+                        </h3>
+
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-sm">
+                          {hasDiscount && (
+                            <span className="text-gray-400 line-through">
+                              ₹{item.originalPrice.toFixed(2)}
+                            </span>
+                          )}
+
+                          <span className="font-medium text-gray-700">
+                            ₹{item.price.toFixed(2)} × {item.quantity}
+                          </span>
+                        </div>
+
+                        {hasDiscount && (
+                          <p className="mt-1 text-sm font-medium text-green-700">
+                            You saved ₹{itemSavings.toFixed(2)}
+                          </p>
+                        )}
+                      </div>
+
+                      <p className="shrink-0 font-semibold text-gray-900">
+                        ₹{item.subtotal.toFixed(2)}
                       </p>
                     </div>
-
-                    <p className="shrink-0 font-semibold text-gray-900">
-                      ₹{item.subtotal}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
 
@@ -451,6 +478,7 @@ const OrderDetailsPage = () => {
 
             <div className="mt-5 space-y-3">
               {order.items.map((item) => (
+                
                 <div
                   key={item.id}
                   className="flex justify-between gap-4 text-sm"
@@ -468,15 +496,29 @@ const OrderDetailsPage = () => {
 
             <div className="my-5 border-t border-gray-100" />
 
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-gray-900">
-                Total
-              </span>
+              {/* Total savings */}
+              {totalSavings > 0 && (
+                <div className="mb-4 flex items-center justify-between text-sm">
+                  <span className="font-medium text-green-700">
+                    Total savings
+                  </span>
 
-              <span className="text-2xl font-bold text-green-700">
-                ₹{order.totalAmount}
-              </span>
-            </div>
+                  <span className="font-semibold text-green-700">
+                    −₹{totalSavings.toFixed(2)}
+                  </span>
+                </div>
+              )}
+
+              {/* Total */}
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-gray-900">
+                  Total
+                </span>
+
+                <span className="text-2xl font-bold text-green-700">
+                  ₹{order.totalAmount}
+                </span>
+              </div>
 
             {isPaymentPending && (
               <button

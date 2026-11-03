@@ -1,10 +1,19 @@
 import { useState } from "react";
 import { ArrowLeft, Mail, ShieldCheck } from "lucide-react";
 import { requestOtp, verifyOtp } from "../../api/authApi";
+import { useLocation, useNavigate } from "react-router-dom";
+import { mergeGuestCartIntoAccount } from "../../api/cartApi";
 import { useAuth } from "../../context/AuthContext";
 
 const OtpLoginForm = () => {
   const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = location.state?.from;
+  const redirectTo = from
+    ? `${from.pathname}${from.search ?? ""}${from.hash ?? ""}`
+    : "/products";
 
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -64,6 +73,10 @@ const OtpLoginForm = () => {
       });
 
       login(response.token);
+
+      await mergeGuestCartIntoAccount();
+
+      navigate(redirectTo, { replace: true });
       setMessage("Login successful.");
     } catch {
       setError("Invalid or expired OTP.");

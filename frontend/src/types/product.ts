@@ -3,6 +3,7 @@ interface Product {
   name: string;
   description: string;
   price: number;
+  discountedPrice?: number | null;
   stock: number;
   imageUrl: string | null;
   category: string;

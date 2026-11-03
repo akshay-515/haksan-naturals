@@ -27,23 +27,31 @@ public class UserService {
                 });
     }
 
+
     public User findOrCreateGoogleUser(String email) {
-
-        return userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseGet(() -> {
-
-                    User user = User.builder()
+                    User newUser = User.builder()
                             .email(email)
                             .role(Role.CUSTOMER)
-                            .name(email.substring(0,5))
+                            .name(email.substring(0, Math.min(5, email.length())))
                             .authProvider(AuthProvider.GOOGLE)
                             .emailVerified(true)
                             .phoneVerified(false)
                             .build();
 
-                    return userRepository.save(user);
+                    return userRepository.save(newUser);
                 });
+
+        if (user.getRole() != Role.CUSTOMER) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "This account cannot use customer Google login"
+            );
+        }
+
+        return user;
     }
+
 
     public User getUserById(Long userId) {
         return userRepository.findById(userId)

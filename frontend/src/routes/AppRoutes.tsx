@@ -18,20 +18,19 @@ import { AdminProductsPage } from "../components/admin/AdminProductsPage";
 import { AdminProductFormPage } from "../components/admin/AdminProductFormPage";
 import { AdminProductEditPage } from "../components/admin/AdminProductEditPage";
 import { AdminOrdersPage } from "../components/admin/AdminOrdersPage";
+import { GoogleCallbackPage } from "../pages/public/GoogleCallbackPage";
 
 const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/products" element={<ProductsPage />} />
-      <Route
-        path="/products/:productId"
-        element={<ProductDetailsPage />}
-      />
+      <Route path="/products/:productId" element={<ProductDetailsPage />}/>
+      <Route path="/auth/google/callback" element={<GoogleCallbackPage />}/>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/cart" element={<CartPage />} />
 
       <Route element={<ProtectedRoute />}>
-        <Route path="/cart" element={<CartPage />} />
         <Route path="/addresses" element={<AddressesPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/orders/:orderId" element={<OrderDetailsPage />}/>

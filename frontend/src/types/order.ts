@@ -2,6 +2,7 @@ interface OrderItem {
   id: number;
   productId: number;
   productName: string;
+  originalPrice: number;
   price: number;
   quantity: number;
   subtotal: number;

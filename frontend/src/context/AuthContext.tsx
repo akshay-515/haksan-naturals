@@ -5,6 +5,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { getCart } from "../api/cartApi";
+import { saveCartAsGuestCart } from "../utils/guestCart";
 import { jwtDecode } from "jwt-decode";
 import type { JwtPayload } from "../types/auth";
 
@@ -12,8 +14,9 @@ interface AuthContextValue {
   token: string | null;
   user: JwtPayload | null;
   isAuthenticated: boolean;
+  isAuthReady: boolean;
   login: (token: string) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 interface AuthProviderProps {
@@ -25,6 +28,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(
 );
 
 const AuthProvider = ({ children }: AuthProviderProps) => {
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const [token, setToken] = useState<string | null>(() => {
     return localStorage.getItem("token");
   });
@@ -34,6 +38,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     if (!token) {
       setUser(null);
+      setIsAuthReady(true);
       return;
     }
 
@@ -44,14 +49,17 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
         localStorage.removeItem("token");
         setToken(null);
         setUser(null);
+        setIsAuthReady(true);
         return;
       }
 
       setUser(decodedToken);
+      setIsAuthReady(true);
     } catch {
       localStorage.removeItem("token");
       setToken(null);
       setUser(null);
+      setIsAuthReady(true);
     }
   }, [token]);
 
@@ -60,10 +68,17 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     setToken(newToken);
   };
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    setToken(null);
-    setUser(null);
+  const logout = async () => {
+    try {
+      const cart = await getCart();
+      saveCartAsGuestCart(cart);
+    } catch (error) {
+      console.error("Failed to preserve cart before logout:", error);
+    } finally {
+      localStorage.removeItem("token");
+      setToken(null);
+      setUser(null);
+    }
   };
 
   const isAuthenticated = token !== null && user !== null;
@@ -74,6 +89,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
         token,
         user,
         isAuthenticated,
+        isAuthReady,
         login,
         logout,
       }}

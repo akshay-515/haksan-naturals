@@ -19,6 +19,16 @@ const AdminProductsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const hasDiscount = (product: Product) =>
+    product.discountedPrice != null &&
+    product.discountedPrice > 0 &&
+    product.discountedPrice < product.price;
+
+  const getDiscountPercentage = (product: Product) =>
+    Math.round(
+      ((product.price - product.discountedPrice!) / product.price) * 100
+    );
+
   const loadProducts = async () => {
     try {
       setError("");
@@ -239,8 +249,28 @@ const AdminProductsPage = () => {
                       </td>
 
                       {/* Price */}
-                      <td className="px-6 py-4 text-sm font-semibold text-gray-900">
-                        ₹{product.price}
+                      <td className="px-6 py-4">
+                        {hasDiscount(product) ? (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-green-700">
+                                ₹{product.discountedPrice!.toFixed(2)}
+                              </span>
+
+                              <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
+                                {getDiscountPercentage(product)}% OFF
+                              </span>
+                            </div>
+
+                            <span className="text-xs text-gray-400 line-through">
+                              ₹{product.price.toFixed(2)}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-sm font-semibold text-gray-900">
+                            ₹{product.price.toFixed(2)}
+                          </span>
+                        )}
                       </td>
 
                       {/* Stock */}
@@ -368,10 +398,26 @@ const AdminProductsPage = () => {
                       {product.category}
                     </p>
 
-                    <div className="mt-2 flex items-center gap-4">
-                      <p className="text-sm font-bold text-gray-900">
-                        ₹{product.price}
-                      </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-3">
+                      {hasDiscount(product) ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-sm font-bold text-green-700">
+                            ₹{product.discountedPrice!.toFixed(2)}
+                          </span>
+
+                          <span className="text-xs text-gray-400 line-through">
+                            ₹{product.price.toFixed(2)}
+                          </span>
+
+                          <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
+                            {getDiscountPercentage(product)}% OFF
+                          </span>
+                        </div>
+                      ) : (
+                        <p className="text-sm font-bold text-gray-900">
+                          ₹{product.price.toFixed(2)}
+                        </p>
+                      )}
 
                       <p
                         className={`text-sm ${

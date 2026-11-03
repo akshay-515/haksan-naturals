@@ -1,32 +1,60 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import {
+  ArrowRight,
+  Minus,
+  Plus,
+  ShoppingBag,
+  Trash2,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getCart, updateCartItem, removeCartItem } from "../../api/cartApi";
+
+import {
+  getCart,
+  updateCartItem,
+  removeCartItem,
+} from "../../api/cartApi";
+import {
+  getGuestCart,
+  updateGuestCartItem,
+  removeGuestCartItem,
+} from "../../utils/guestCart";
+import { useAuth } from "../../context/AuthContext";
 import type { Cart } from "../../types/cart";
 
 const CartPage = () => {
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const loadCart = async () => {
+      setLoading(true);
+      setError("");
+
       try {
-        const data = await getCart();
-        setCart(data);
+        if (isAuthenticated) {
+          const data = await getCart();
+          setCart(data);
+        } else {
+          setCart(getGuestCart());
+        }
       } catch {
         setError("Failed to load cart.");
+        setCart(null);
       } finally {
         setLoading(false);
       }
     };
 
     loadCart();
-  }, []);
+  }, [isAuthenticated]);
 
   const handleQuantityChange = async (
     itemId: number,
+    productId: number,
     quantity: number
   ) => {
     if (quantity < 1) {
@@ -36,19 +64,32 @@ const CartPage = () => {
     try {
       setError("");
 
-      const updatedCart = await updateCartItem(itemId, quantity);
-      setCart(updatedCart);
+      if (isAuthenticated) {
+        const updatedCart = await updateCartItem(itemId, quantity);
+        setCart(updatedCart);
+      } else {
+        const updatedCart = updateGuestCartItem(productId, quantity);
+        setCart(updatedCart);
+      }
     } catch {
-      setError("Failed to update cart.");
+      setError("Failed to update cart. Please check product availability.");
     }
   };
 
-  const handleRemoveItem = async (itemId: number) => {
+  const handleRemoveItem = async (
+    itemId: number,
+    productId: number
+  ) => {
     try {
       setError("");
 
-      const updatedCart = await removeCartItem(itemId);
-      setCart(updatedCart);
+      if (isAuthenticated) {
+        const updatedCart = await removeCartItem(itemId);
+        setCart(updatedCart);
+      } else {
+        const updatedCart = removeGuestCartItem(productId);
+        setCart(updatedCart);
+      }
     } catch {
       setError("Failed to remove item.");
     }
@@ -59,6 +100,7 @@ const CartPage = () => {
       <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="animate-pulse">
           <div className="h-8 w-40 rounded bg-gray-200" />
+
           <div className="mt-8 space-y-4">
             {[1, 2].map((item) => (
               <div
@@ -72,19 +114,19 @@ const CartPage = () => {
     );
   }
 
-  if (error || !cart) {
+  if (error && !cart) {
     return (
       <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="rounded-2xl border border-red-100 bg-red-50 p-6 text-center">
           <p className="text-sm font-medium text-red-700">
-            {error || "Cart not found."}
+            {error}
           </p>
         </div>
       </main>
     );
   }
 
-  if (cart.items.length === 0) {
+  if (!cart || cart.items.length === 0) {
     return (
       <main className="mx-auto flex min-h-[60vh] items-center justify-center px-4 py-12">
         <div className="max-w-md text-center">
@@ -120,7 +162,6 @@ const CartPage = () => {
   return (
     <main className="bg-gray-50">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-
         {/* Header */}
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-green-700">
@@ -135,7 +176,8 @@ const CartPage = () => {
 
               <p className="mt-2 text-sm text-gray-600">
                 {cart.items.length}{" "}
-                {cart.items.length === 1 ? "item" : "items"} in your cart.
+                {cart.items.length === 1 ? "item" : "items"} in your
+                cart.
               </p>
             </div>
           </div>
@@ -148,111 +190,141 @@ const CartPage = () => {
         )}
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px] lg:items-start">
-
           {/* Cart Items */}
           <div className="space-y-4">
-            {cart.items.map((item) => (
-              <div
-                key={item.itemId}
-                className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5"
-              >
-                <div className="flex gap-4">
+            {cart.items.map((item) => {
+              const guestStockLimitReached =
+                !isAuthenticated &&
+                item.stock !== undefined &&
+                item.quantity >= item.stock;
 
-                  {/* Product image */}
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/products/${item.productId}`)}
-                    className="h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-gray-100 sm:h-28 sm:w-28"
-                  >
-                    {item.imageUrl ? (
-                      <img
-                        src={item.imageUrl}
-                        alt={item.productName}
-                        className="h-full w-full object-cover transition hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-xs text-gray-500">
-                        No image
-                      </div>
-                    )}
-                  </button>
+              return (
+                <div
+                  key={item.productId}
+                  className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5"
+                >
+                  <div className="flex gap-4">
+                    {/* Product image */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate(`/products/${item.productId}`)
+                      }
+                      className="h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-gray-100 sm:h-28 sm:w-28"
+                    >
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.productName}
+                          className="h-full w-full object-cover transition hover:scale-105"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-xs text-gray-500">
+                          No image
+                        </div>
+                      )}
+                    </button>
 
-                  {/* Product details */}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
-                      <div>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            navigate(`/products/${item.productId}`)
-                          }
-                          className="text-left text-base font-semibold text-gray-900 hover:text-green-700 sm:text-lg"
-                        >
-                          {item.productName}
-                        </button>
+                    {/* Product details */}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              navigate(`/products/${item.productId}`)
+                            }
+                            className="text-left text-base font-semibold text-gray-900 hover:text-green-700 sm:text-lg"
+                          >
+                            {item.productName}
+                          </button>
 
-                        <p className="mt-1 text-sm text-gray-500">
-                          ₹{item.price} each
+                          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm">
+                            {item.originalPrice != null &&
+                            item.originalPrice > item.price ? (
+                              <>
+                                <span className="font-semibold text-green-700">
+                                  ₹{item.price.toFixed(2)}
+                                </span>
+
+                                <span className="text-gray-500 line-through">
+                                  ₹{item.originalPrice.toFixed(2)}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-gray-500">
+                                ₹{item.price.toFixed(2)}
+                              </span>
+                            )}
+
+                            <span className="text-gray-500">each</span>
+                          </div>
+                        </div>
+
+                        <p className="text-base font-bold text-green-700 sm:text-lg">
+                          ₹{item.subtotal.toFixed(2)}
                         </p>
                       </div>
 
-                      <p className="text-base font-bold text-green-700 sm:text-lg">
-                        ₹{item.subtotal}
-                      </p>
-                    </div>
+                      {/* Quantity + Remove */}
+                      <div className="mt-4 flex items-center justify-between gap-4">
+                        <div className="flex items-center rounded-lg border border-gray-200">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleQuantityChange(
+                                item.itemId,
+                                item.productId,
+                                item.quantity - 1
+                              )
+                            }
+                            disabled={item.quantity <= 1}
+                            className="flex h-9 w-9 items-center justify-center text-gray-600 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-30"
+                            aria-label="Decrease quantity"
+                          >
+                            <Minus size={15} />
+                          </button>
 
-                    {/* Quantity + Remove */}
-                    <div className="mt-4 flex items-center justify-between gap-4">
-                      <div className="flex items-center rounded-lg border border-gray-200">
+                          <span className="min-w-10 text-center text-sm font-semibold text-gray-900">
+                            {item.quantity}
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleQuantityChange(
+                                item.itemId,
+                                item.productId,
+                                item.quantity + 1
+                              )
+                            }
+                            disabled={guestStockLimitReached}
+                            className="flex h-9 w-9 items-center justify-center text-gray-600 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-30"
+                            aria-label="Increase quantity"
+                          >
+                            <Plus size={15} />
+                          </button>
+                        </div>
+
                         <button
                           type="button"
                           onClick={() =>
-                            handleQuantityChange(
+                            handleRemoveItem(
                               item.itemId,
-                              item.quantity - 1
+                              item.productId
                             )
                           }
-                          disabled={item.quantity <= 1}
-                          className="flex h-9 w-9 items-center justify-center text-gray-600 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-30"
-                          aria-label="Decrease quantity"
+                          className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 transition hover:text-red-600"
                         >
-                          <Minus size={15} />
-                        </button>
-
-                        <span className="min-w-10 text-center text-sm font-semibold text-gray-900">
-                          {item.quantity}
-                        </span>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleQuantityChange(
-                              item.itemId,
-                              item.quantity + 1
-                            )
-                          }
-                          className="flex h-9 w-9 items-center justify-center text-gray-600 transition hover:bg-gray-50"
-                          aria-label="Increase quantity"
-                        >
-                          <Plus size={15} />
+                          <Trash2 size={16} />
+                          Remove
                         </button>
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleRemoveItem(item.itemId)
-                        }
-                        className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 transition hover:text-red-600"
-                      >
-                        <Trash2 size={16} />
-                        Remove
-                      </button>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Order Summary */}
@@ -263,9 +335,7 @@ const CartPage = () => {
 
             <div className="mt-5 space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">
-                  Subtotal
-                </span>
+                <span className="text-gray-600">Subtotal</span>
 
                 <span className="font-medium text-gray-900">
                   ₹{cart.totalAmount}
@@ -273,9 +343,7 @@ const CartPage = () => {
               </div>
 
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">
-                  Delivery
-                </span>
+                <span className="text-gray-600">Delivery</span>
 
                 <span className="font-medium text-green-700">
                   Calculated at checkout

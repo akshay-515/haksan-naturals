@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getProductById } from "../../api/ProductApi";
 import { useAuth } from "../../context/AuthContext";
 import { addToCart } from "../../api/cartApi";
+import { addGuestCartItem } from "../../utils/guestCart";
 import type { Product } from "../../types/product";
 
 const ProductDetailsPage = () => {
@@ -60,29 +61,37 @@ const ProductDetailsPage = () => {
       );
     }
 
-    const handleAddToCart = async () => {
+  const hasDiscount =
+    product.discountedPrice != null &&
+    product.discountedPrice > 0 &&
+    product.discountedPrice < product.price;
+
+  const discountPercentage = hasDiscount
+    ? Math.round(
+        ((product.price - product.discountedPrice!) / product.price) * 100
+      )
+    : 0;
+
+  const handleAddToCart = async () => {
+    setAddingToCart(true);
+    setCartMessage("");
+    setCartError("");
+
+    try {
       if (!isAuthenticated) {
-        navigate("/login");
+        addGuestCartItem(product, quantity);
+        setCartMessage("Product added to cart.");
         return;
       }
 
-      setAddingToCart(true);
-      setCartMessage("");
-      setCartError("");
-
-      try {
-        await addToCart({
-          productId: product.id,
-          quantity,
-        });
-
-        setCartMessage("Product added to cart.");
-      } catch {
-        setCartError("Failed to add product to cart.");
-      } finally {
-        setAddingToCart(false);
-      }
-    };
+      await addToCart({ productId: product.id, quantity });
+      setCartMessage("Product added to cart.");
+    } catch {
+      setCartError("Failed to add product to cart.");
+    } finally {
+      setAddingToCart(false);
+    }
+  };
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10">
@@ -116,9 +125,35 @@ const ProductDetailsPage = () => {
             {product.description}
           </p>
 
-          <p className="mt-6 text-2xl font-bold text-green-700">
-            ₹{product.price}
-          </p>
+        {/* Product Price */}
+          <div className="mt-6">
+            {hasDiscount ? (
+              <>
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="text-3xl font-bold text-green-700">
+                    ₹{product.discountedPrice!.toFixed(2)}
+                  </p>
+
+                  <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-700">
+                    {discountPercentage}% OFF
+                  </span>
+                </div>
+
+                <p className="mt-2 text-lg text-gray-500 line-through">
+                  ₹{product.price.toFixed(2)}
+                </p>
+
+                <p className="mt-2 text-sm font-medium text-green-700">
+                  You save ₹
+                  {(product.price - product.discountedPrice!).toFixed(2)}
+                </p>
+              </>
+            ) : (
+              <p className="text-2xl font-bold text-green-700">
+                ₹{product.price.toFixed(2)}
+              </p>
+            )}
+          </div>
 
           <p
             className={`mt-2 text-sm font-medium ${
