@@ -4,11 +4,13 @@ import { requestOtp, verifyOtp } from "../../api/authApi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { mergeGuestCartIntoAccount } from "../../api/cartApi";
 import { useAuth } from "../../context/AuthContext";
+import { useCart } from "../../context/CartContext";
 
 const OtpLoginForm = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { refreshCart } = useCart();
 
   const from = location.state?.from;
   const redirectTo = from
@@ -67,24 +69,33 @@ const OtpLoginForm = () => {
     setMessage("");
 
     try {
-      const response = await verifyOtp({
-        email,
-        otp,
-      });
+      const response = await verifyOtp({ email, otp });
 
       login(response.token);
 
-      await mergeGuestCartIntoAccount();
+      let cartSyncFailed = false;
+
+      try {
+        await mergeGuestCartIntoAccount();
+      } catch (cartError) {
+        console.error("Failed to merge guest cart:", cartError);
+        cartSyncFailed = true;
+      }
+
+      await refreshCart();
+
+      if (cartSyncFailed) {
+        console.warn("Customer logged in, but cart merge needs attention.");
+      }
 
       navigate(redirectTo, { replace: true });
-      setMessage("Login successful.");
     } catch {
       setError("Invalid or expired OTP.");
     } finally {
       setLoading(false);
     }
   };
-
+  
   const handleChangeEmail = () => {
     setOtpSent(false);
     setOtp("");

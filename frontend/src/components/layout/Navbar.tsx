@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import {
@@ -7,10 +8,13 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useCart } from "../../context/CartContext";
 import logoMark from "../../assets/haksan-logo-mark.png";
 
 const Navbar = () => {
   const { isAuthenticated, logout } = useAuth();
+  const { cartCount } = useCart();
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const closeMobileMenu = () => {
@@ -52,7 +56,6 @@ const Navbar = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden items-center gap-8 md:flex">
-
           <NavLink to="/" className={navLinkClass}>
             Home
           </NavLink>
@@ -84,7 +87,6 @@ const Navbar = () => {
 
         {/* Desktop Account */}
         <div className="hidden items-center gap-3 md:flex">
-
           {isAuthenticated ? (
             <>
               <Link
@@ -114,19 +116,40 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Mobile Menu Button */}
-        <button
-          type="button"
-          onClick={() => setMobileMenuOpen((current) => !current)}
-          className="rounded-lg p-2 text-gray-700 transition hover:bg-gray-100 md:hidden"
-          aria-label="Toggle navigation menu"
-        >
-          {mobileMenuOpen ? (
-            <X size={24} />
-          ) : (
-            <Menu size={24} />
-          )}
-        </button>
+        {/* Mobile Actions */}
+        <div className="flex items-center gap-2 md:hidden">
+
+          {/* Mobile Cart */}
+          <Link
+            to="/cart"
+            onClick={closeMobileMenu}
+            aria-label={`Shopping cart${cartCount > 0 ? `, ${cartCount} items` : ", empty"}`}
+            className="relative rounded-lg p-2 text-gray-700 transition hover:bg-gray-100"
+          >
+            <ShoppingBag size={24} strokeWidth={1.8} />
+
+            {cartCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-green-700 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
+                {cartCount > 99 ? "99+" : cartCount}
+              </span>
+            )}
+          </Link>
+
+          {/* Hamburger Menu */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((current) => !current)}
+            className="rounded-lg p-2 text-gray-700 transition hover:bg-gray-100"
+            aria-label="Toggle navigation menu"
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? (
+              <X size={24} />
+            ) : (
+              <Menu size={24} />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Navigation */}
@@ -180,8 +203,8 @@ const Navbar = () => {
 
                 <button
                   type="button"
-                  onClick={() => {
-                    logout();
+                  onClick={async () => {
+                    await logout();
                     closeMobileMenu();
                   }}
                   className="py-3 text-left text-sm font-medium text-red-600"

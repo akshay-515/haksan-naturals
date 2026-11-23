@@ -3,12 +3,14 @@ import { useParams } from "react-router-dom";
 import { getProductById } from "../../api/ProductApi";
 import { useAuth } from "../../context/AuthContext";
 import { addToCart } from "../../api/cartApi";
+import { useCart } from "../../context/CartContext";
 import { addGuestCartItem } from "../../utils/guestCart";
 import type { Product } from "../../types/product";
 
 const ProductDetailsPage = () => {
   const { productId } = useParams<{ productId: string }>();
   const {isAuthenticated} = useAuth();
+  const { syncCart } = useCart();
 
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
@@ -77,13 +79,18 @@ const ProductDetailsPage = () => {
     setCartError("");
 
     try {
+      let updatedCart;
+
       if (!isAuthenticated) {
-        addGuestCartItem(product, quantity);
-        setCartMessage("Product added to cart.");
-        return;
+        updatedCart = addGuestCartItem(product, quantity);
+      } else {
+        updatedCart = await addToCart({
+          productId: product.id,
+          quantity,
+        });
       }
 
-      await addToCart({ productId: product.id, quantity });
+      syncCart(updatedCart);
       setCartMessage("Product added to cart.");
     } catch {
       setCartError("Failed to add product to cart.");
@@ -167,29 +174,38 @@ const ProductDetailsPage = () => {
           </p>
 
           {product.stock > 0 && (
-            <div className="mt-6 flex items-center gap-3">
-              <label
-                htmlFor="quantity"
-                className="text-sm font-medium text-gray-700"
-              >
+            <div className="mt-6 flex items-center gap-4">
+              <label className="font-medium text-gray-700">
                 Quantity
               </label>
 
-              <input
-                id="quantity"
-                type="number"
-                min={1}
-                max={product.stock}
-                value={quantity}
-                onChange={(event) => {
-                  const value = Number(event.target.value);
+              <div className="flex items-center overflow-hidden rounded-lg border border-gray-300">
+                <button
+                  type="button"
+                  onClick={() => setQuantity((previous) => Math.max(1, previous - 1))}
+                  disabled={quantity <= 1}
+                  className="px-4 py-2 text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  −
+                </button>
 
-                  if (value >= 1 && value <= product.stock) {
-                    setQuantity(value);
+                <span className="min-w-12 text-center font-semibold">
+                  {quantity}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setQuantity((previous) =>
+                      Math.min(product.stock, previous + 1)
+                    )
                   }
-                }}
-                className="w-20 rounded-md border border-gray-300 px-3 py-2"
-              />
+                  disabled={quantity >= product.stock}
+                  className="px-4 py-2 text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  +
+                </button>
+              </div>
             </div>
           )}
 
