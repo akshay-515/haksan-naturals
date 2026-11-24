@@ -1,15 +1,24 @@
 
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+  useSearchParams,
+  useLocation,
+} from "react-router-dom";
+
 import { apiClient } from "../../api/client";
 import { mergeGuestCartIntoAccount } from "../../api/cartApi";
 import { useAuth } from "../../context/AuthContext";
+import { useCart } from "../../context/CartContext";
 
 const GoogleCallbackPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
+
   const { login } = useAuth();
+  const { refreshCart } = useCart();
 
   const from = location.state?.from;
 
@@ -42,34 +51,57 @@ const GoogleCallbackPage = () => {
     }
 
     const exchangeCode = async () => {
+      // Step 1: Exchange Google authorization code for JWT.
+      let token: string;
+
       try {
         const response = await apiClient.post<{ token: string }>(
           "/api/auth/customer/google/exchange",
           { code }
         );
 
-        login(response.data.token);
+        token = response.data.token;
+      } catch (error) {
+        console.error("Google token exchange failed:", error);
 
-        await mergeGuestCartIntoAccount();
-
-        window.history.replaceState(
-          {},
-          document.title,
-          window.location.pathname
-        );
-
-navigate(redirectTo, { replace: true });
-
-        navigate(redirectTo, { replace: true });
-      } catch {
         setError(
           "Google sign-in could not be completed. Please try again."
         );
+        return;
       }
+
+      // Step 2: Authenticate the customer.
+      login(token);
+
+      // Step 3: Merge the guest cart into the account cart.
+      try {
+        await mergeGuestCartIntoAccount();
+      } catch (error) {
+        console.error("Guest cart merge failed:", error);
+      }
+
+      // Step 4: Refresh shared cart state.
+      await refreshCart();
+
+      // Step 5: Remove OAuth code from the browser URL.
+      window.history.replaceState(
+        {},
+        document.title,
+        window.location.pathname
+      );
+
+      // Step 6: Navigate to the intended destination.
+      navigate(redirectTo, { replace: true });
     };
 
     void exchangeCode();
-  }, [searchParams, login, navigate, redirectTo]);
+  }, [
+    searchParams,
+    login,
+    navigate,
+    redirectTo,
+    refreshCart,
+  ]);
 
   if (error) {
     return (
@@ -79,7 +111,9 @@ navigate(redirectTo, { replace: true });
             Sign-in unsuccessful
           </h1>
 
-          <p className="mt-3 text-sm text-gray-600">{error}</p>
+          <p className="mt-3 text-sm text-gray-600">
+            {error}
+          </p>
 
           <Link
             to="/login"

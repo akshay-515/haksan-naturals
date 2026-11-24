@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
@@ -9,48 +10,35 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import {
-  getCart,
   updateCartItem,
   removeCartItem,
 } from "../../api/cartApi";
+
 import {
-  getGuestCart,
   updateGuestCartItem,
   removeGuestCartItem,
 } from "../../utils/guestCart";
+
 import { useAuth } from "../../context/AuthContext";
-import type { Cart } from "../../types/cart";
+import { useCart } from "../../context/CartContext";
 
 const CartPage = () => {
-  const [cart, setCart] = useState<Cart | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
+  const {
+    cart,
+    isCartLoading,
+    cartError,
+    refreshCart,
+    syncCart,
+  } = useCart();
+
+  const [error, setError] = useState("");
+
   useEffect(() => {
-    const loadCart = async () => {
-      setLoading(true);
-      setError("");
-
-      try {
-        if (isAuthenticated) {
-          const data = await getCart();
-          setCart(data);
-        } else {
-          setCart(getGuestCart());
-        }
-      } catch {
-        setError("Failed to load cart.");
-        setCart(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCart();
-  }, [isAuthenticated]);
+    void refreshCart();
+  }, [refreshCart]);
 
   const handleQuantityChange = async (
     itemId: number,
@@ -64,15 +52,15 @@ const CartPage = () => {
     try {
       setError("");
 
-      if (isAuthenticated) {
-        const updatedCart = await updateCartItem(itemId, quantity);
-        setCart(updatedCart);
-      } else {
-        const updatedCart = updateGuestCartItem(productId, quantity);
-        setCart(updatedCart);
-      }
+      const updatedCart = isAuthenticated
+        ? await updateCartItem(itemId, quantity)
+        : updateGuestCartItem(productId, quantity);
+
+      syncCart(updatedCart);
     } catch {
-      setError("Failed to update cart. Please check product availability.");
+      setError(
+        "Failed to update cart. Please check product availability."
+      );
     }
   };
 
@@ -83,19 +71,17 @@ const CartPage = () => {
     try {
       setError("");
 
-      if (isAuthenticated) {
-        const updatedCart = await removeCartItem(itemId);
-        setCart(updatedCart);
-      } else {
-        const updatedCart = removeGuestCartItem(productId);
-        setCart(updatedCart);
-      }
+      const updatedCart = isAuthenticated
+        ? await removeCartItem(itemId)
+        : removeGuestCartItem(productId);
+
+      syncCart(updatedCart);
     } catch {
       setError("Failed to remove item.");
     }
   };
 
-  if (loading) {
+  if (isCartLoading) {
     return (
       <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="animate-pulse">
@@ -114,12 +100,12 @@ const CartPage = () => {
     );
   }
 
-  if (error && !cart) {
+  if ((error || cartError) && !cart) {
     return (
       <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="rounded-2xl border border-red-100 bg-red-50 p-6 text-center">
           <p className="text-sm font-medium text-red-700">
-            {error}
+            {error || cartError}
           </p>
         </div>
       </main>
@@ -176,8 +162,7 @@ const CartPage = () => {
 
               <p className="mt-2 text-sm text-gray-600">
                 {cart.items.length}{" "}
-                {cart.items.length === 1 ? "item" : "items"} in your
-                cart.
+                {cart.items.length === 1 ? "item" : "items"} in your cart.
               </p>
             </div>
           </div>
@@ -189,12 +174,12 @@ const CartPage = () => {
           </div>
         )}
 
+        {/* Cart content */}
         <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px] lg:items-start">
           {/* Cart Items */}
           <div className="space-y-4">
             {cart.items.map((item) => {
-              const guestStockLimitReached =
-                !isAuthenticated &&
+              const stockLimitReached =
                 item.stock !== undefined &&
                 item.quantity >= item.stock;
 
@@ -298,7 +283,7 @@ const CartPage = () => {
                                 item.quantity + 1
                               )
                             }
-                            disabled={guestStockLimitReached}
+                            disabled={stockLimitReached}
                             className="flex h-9 w-9 items-center justify-center text-gray-600 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-30"
                             aria-label="Increase quantity"
                           >
