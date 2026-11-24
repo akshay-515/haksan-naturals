@@ -1,16 +1,34 @@
+
 import { Link } from "react-router-dom";
-import { Leaf, Mail } from "lucide-react";
-import logoMark from "../../assets/haksan-logo-mark.png"
+import {
+  Leaf,
+  Mail,
+  MapPin,
+  Phone,
+} from "lucide-react";
+
+import logoMark from "../../assets/haksan-logo-mark.png";
+import { PRODUCT_CATEGORIES } from "../../types/constants/productCategories";
+
+const COMPANY_ADDRESS =
+  "Door No.43-106/1-11, Indiranayaknagar, Ajith Singh Nagar, Vijayawada-520015, Andhra Pradesh, India";
+
+const COMPANY_PHONE = "+919014006882";
+const COMPANY_EMAIL = "haksannaturals@gmail.com";
 
 const Footer = () => {
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    COMPANY_ADDRESS
+  )}`;
+
   return (
     <footer className="border-t border-green-900/10 bg-green-950 text-white">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
 
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-5 lg:gap-8">
 
-          {/* Brand */}
-          <div className="lg:col-span-2">
+          {/* Brand and Address */}
+          <div className="sm:col-span-2 lg:col-span-2 lg:pr-10">
             <Link to="/" className="inline-flex items-center gap-3">
               <img
                 src={logoMark}
@@ -30,14 +48,37 @@ const Footer = () => {
             </Link>
 
             <p className="mt-5 max-w-md text-sm leading-6 text-green-100/70">
-              Natural fruit, vegetable, leaf and spice powders
-              made for simple, everyday nutrition.
+              Discover our range of fruit powders, vegetable powders,
+              dry fruits and natural oils for everyday needs.
             </p>
 
-            <div className="mt-5 flex items-center gap-2 text-sm text-green-100/70">
-              <Leaf size={17} className="text-green-300" />
-              Naturally inspired products.
+            <div className="mt-4 mb-4 flex items-center gap-2 text-sm text-green-100/70">
+              <Leaf size={17} className="shrink-0 text-green-300" />
+              <span>Naturally inspired products.</span>
             </div>
+
+            {/* Company Address */}
+            <h3 className=" text-sm font-semibold uppercase tracking-wider text-green-300">
+              Address
+            </h3>
+            <a
+              href={mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 flex max-w-md items-start gap-3 text-sm leading-6 text-green-100/70 transition hover:text-white"
+            >
+              {/* <MapPin
+                size={18}
+                className="mt-1 shrink-0 text-green-300"
+              /> */}
+
+              <span>
+                {COMPANY_ADDRESS}
+                <span className="mt-1 block text-xs font-medium text-green-300">
+                  View on Google Maps
+                </span>
+              </span>
+            </a>
           </div>
 
           {/* Shop */}
@@ -54,26 +95,15 @@ const Footer = () => {
                 All Products
               </Link>
 
-              <Link
-                to="/products"
-                className="text-sm text-green-100/70 transition hover:text-white"
-              >
-                Fruit Powders
-              </Link>
-
-              <Link
-                to="/products"
-                className="text-sm text-green-100/70 transition hover:text-white"
-              >
-                Vegetable Powders
-              </Link>
-
-              <Link
-                to="/products"
-                className="text-sm text-green-100/70 transition hover:text-white"
-              >
-                Leaf Powders
-              </Link>
+              {PRODUCT_CATEGORIES.map((category) => (
+                <Link
+                  key={category}
+                  to={`/products?category=${encodeURIComponent(category)}`}
+                  className="text-sm text-green-100/70 transition hover:text-white"
+                >
+                  {category}
+                </Link>
+              ))}
             </nav>
           </div>
 
@@ -113,28 +143,61 @@ const Footer = () => {
               </Link>
 
               <Link
-               to="/admin/login"
-               className="text-sm text-green-100/70 transition hover:text-white"
-               >
+                to="/admin/login"
+                className="text-sm text-green-100/70 transition hover:text-white"
+              >
                 Admin Login
               </Link>
             </nav>
           </div>
+
+          {/* Contact Us */}
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-green-300">
+              Contact Us
+            </h3>
+
+            <div className="mt-4 flex flex-col gap-5">
+              <a
+                href={`tel:${COMPANY_PHONE}`}
+                className="flex items-center gap-3 text-sm text-green-100/70 transition hover:text-white"
+              >
+                <Phone
+                  size={18}
+                  className="shrink-0 text-green-300"
+                />
+
+                +91 90140 06882
+              </a>
+
+              <a
+                href={`mailto:${COMPANY_EMAIL}`}
+                className="flex items-start gap-3 break-all text-sm text-green-100/70 transition hover:text-white"
+              >
+                <Mail
+                  size={18}
+                  className="shrink-0 text-green-300"
+                />
+
+                {COMPANY_EMAIL}
+              </a>
+            </div>
+          </div>
+
         </div>
 
         {/* Bottom */}
         <div className="mt-10 flex flex-col gap-3 border-t border-white/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
-
           <p className="text-xs text-green-100/50">
             © {new Date().getFullYear()} Haksan Naturals. All rights reserved.
           </p>
 
           <div className="flex items-center gap-2 text-xs text-green-100/50">
-            <Mail size={14} />
-            Natural goodness, delivered.
+            <Leaf size={14} />
+            Pure Goodness, Naturally.
           </div>
-
         </div>
+
       </div>
     </footer>
   );

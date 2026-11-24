@@ -6,6 +6,7 @@ import {
   uploadProductImage,
 } from "../../api/adminProductApi";
 import type { AdminProductRequest } from "../../types/adminProduct";
+import { PRODUCT_CATEGORIES } from "../../types/constants/productCategories";
 
 const AdminProductFormPage = () => {
   const navigate = useNavigate();
@@ -23,11 +24,11 @@ const AdminProductFormPage = () => {
   const [error, setError] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const handleChange = (
-    event: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement
-    >
-  ) => {
+const handleChange = (
+  event: React.ChangeEvent<
+    HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+  >
+) => {
     const { name, value } = event.target;
 
     setForm((current) => ({
@@ -291,6 +292,7 @@ const AdminProductFormPage = () => {
                   </div>
                 )}
 
+
               {/* Category */}
               <div className="mt-6">
                 <label
@@ -300,22 +302,30 @@ const AdminProductFormPage = () => {
                   Category
                 </label>
 
-                <input
+                <select
                   id="category"
                   name="category"
-                  type="text"
                   value={form.category}
                   onChange={handleChange}
                   required
-                  placeholder="e.g. Fruit Powders"
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition placeholder:text-gray-400 focus:border-green-600 focus:ring-2 focus:ring-green-100"
-                />
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
+                >
+                  <option value="" disabled>
+                    Select a category
+                  </option>
+
+                  {PRODUCT_CATEGORIES.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
 
                 <p className="mt-2 text-xs text-gray-500">
-                  Example: Fruit Powders, Vegetable Powders, Leaf
-                  Powders, Spice Powders.
+                  Select the category that best describes this product.
                 </p>
               </div>
+
             </div>
           </div>
 
