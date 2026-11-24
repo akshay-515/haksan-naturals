@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import {
   Leaf,
   Mail,
-  MapPin,
   Phone,
 } from "lucide-react";
 
