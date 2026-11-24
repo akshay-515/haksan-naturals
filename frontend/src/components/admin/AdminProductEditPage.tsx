@@ -14,6 +14,7 @@ import {
   uploadProductImage,
 } from "../../api/adminProductApi";
 import type { AdminProductRequest } from "../../types/adminProduct";
+import { PRODUCT_CATEGORIES } from "../../types/constants/productCategories";
 
 const AdminProductEditPage = () => {
   const { productId } = useParams();
@@ -60,7 +61,11 @@ const AdminProductEditPage = () => {
           price: product.price,
           discountedPrice: product.discountedPrice ?? undefined,
           imageUrl: product.imageUrl ?? "",
-          category: product.category,
+          category: PRODUCT_CATEGORIES.some(
+            (category) => category === product.category
+          )
+            ? product.category
+            : "",
           stock: product.stock,
         });
       } catch {
@@ -74,7 +79,9 @@ const AdminProductEditPage = () => {
   }, [productId]);
 
   const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = event.target;
 
@@ -387,25 +394,41 @@ const AdminProductEditPage = () => {
                   </div>
                 )}
 
-              {/* Category */}
-              <div className="mt-6">
-                <label
-                  htmlFor="category"
-                  className="mb-2 block text-sm font-medium text-gray-700"
-                >
-                  Category
-                </label>
+                {/* Category */}
+                <div className="mt-6">
+                  <label
+                    htmlFor="category"
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
+                    Category
+                  </label>
 
-                <input
-                  id="category"
-                  name="category"
-                  type="text"
-                  value={form.category}
-                  onChange={handleChange}
-                  required
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
-                />
-              </div>
+                  <select
+                    id="category"
+                    name="category"
+                    value={form.category}
+                    onChange={handleChange}
+                    required
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
+                  >
+                    <option value="" disabled>
+                      Select a category
+                    </option>
+
+                    {PRODUCT_CATEGORIES.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+
+                  {!form.category && (
+                    <p className="mt-2 text-xs text-amber-700">
+                      This product has an older category. Please select one of the
+                      four supported categories before saving.
+                    </p>
+                  )}
+                </div>
             </div>
           </div>
 
