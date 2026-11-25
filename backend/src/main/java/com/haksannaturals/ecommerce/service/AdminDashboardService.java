@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +27,16 @@ public class AdminDashboardService {
         long pendingOrders =
                 orderRepository.countByStatus(OrderStatus.PENDING);
 
+        long undeliveredOrders =
+                orderRepository.countByStatusIn(
+                        List.of(
+                                OrderStatus.PENDING,
+                                OrderStatus.CONFIRMED,
+                                OrderStatus.PROCESSING,
+                                OrderStatus.SHIPPED
+                        )
+                );
+
         BigDecimal totalRevenue =
                 orderRepository.sumRevenueByPaymentStatus(
                         PaymentStatus.SUCCESS
@@ -35,6 +46,7 @@ public class AdminDashboardService {
                 .totalOrders(totalOrders)
                 .totalProducts(totalProducts)
                 .pendingOrders(pendingOrders)
+                .undeliveredOrders(undeliveredOrders)
                 .totalRevenue(totalRevenue)
                 .build();
     }

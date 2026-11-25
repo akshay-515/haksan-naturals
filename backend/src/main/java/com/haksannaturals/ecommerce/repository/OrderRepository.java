@@ -30,4 +30,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     BigDecimal sumRevenueByPaymentStatus(
             @Param("paymentStatus") PaymentStatus paymentStatus
     );
+
+    long countByStatusIn(List<OrderStatus> statuses);
 }

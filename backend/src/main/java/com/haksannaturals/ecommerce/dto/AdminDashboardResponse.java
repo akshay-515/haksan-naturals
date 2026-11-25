@@ -21,5 +21,7 @@ public class AdminDashboardResponse {
 
     private long pendingOrders;
 
+    private long undeliveredOrders;
+
     private BigDecimal totalRevenue;
 }
