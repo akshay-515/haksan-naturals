@@ -1,5 +1,8 @@
+
 import { useEffect, useState } from "react";
+import type { ChangeEvent, FormEvent } from "react";
 import {
+  ArrowLeft,
   Check,
   ImagePlus,
   Package,
@@ -7,7 +10,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   getAdminProducts,
   updateProduct,
@@ -15,6 +18,14 @@ import {
 } from "../../api/adminProductApi";
 import type { AdminProductRequest } from "../../types/adminProduct";
 import { PRODUCT_CATEGORIES } from "../../types/constants/productCategories";
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
+const ALLOWED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+];
 
 const AdminProductEditPage = () => {
   const { productId } = useParams();
@@ -34,16 +45,31 @@ const AdminProductEditPage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [imageError, setImageError] = useState("");
+
+  const previewUrl = selectedFile
+    ? URL.createObjectURL(selectedFile)
+    : null;
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   useEffect(() => {
     const loadProduct = async () => {
-      if (!productId) {
+      if (!productId || !Number.isInteger(Number(productId))) {
         setError("Invalid product ID.");
         setLoading(false);
         return;
       }
 
       try {
+        setError("");
+
         const products = await getAdminProducts();
 
         const product = products.find(
@@ -69,7 +95,7 @@ const AdminProductEditPage = () => {
           stock: product.stock,
         });
       } catch {
-        setError("Failed to load product.");
+        setError("Failed to load product. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -79,7 +105,7 @@ const AdminProductEditPage = () => {
   }, [productId]);
 
   const handleChange = (
-    event: React.ChangeEvent<
+    event: ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
@@ -98,16 +124,31 @@ const AdminProductEditPage = () => {
     }));
   };
 
-  const handleFileChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
+
+    if (!file) return;
+
+    setImageError("");
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      setImageError("Please select a JPG, PNG or WebP image.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_IMAGE_SIZE) {
+      setImageError("Image size must be 5 MB or less.");
+      event.target.value = "";
+      return;
+    }
 
     setSelectedFile(file);
   };
 
   const removeSelectedFile = () => {
     setSelectedFile(null);
+    setImageError("");
 
     const input = document.getElementById(
       "image"
@@ -118,28 +159,53 @@ const AdminProductEditPage = () => {
     }
   };
 
-  const handleSubmit = async (
-    event: React.FormEvent<HTMLFormElement>
-  ) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!productId) {
+      setError("Invalid product ID.");
       return;
     }
 
-    setSaving(true);
     setError("");
+
+    if (!form.name.trim()) {
+      setError("Product name is required.");
+      return;
+    }
+
+    if (!form.category) {
+      setError("Please select a supported product category.");
+      return;
+    }
+
+    if (!Number.isFinite(form.price) || form.price <= 0) {
+      setError("Regular price must be greater than zero.");
+      return;
+    }
+
+    if (!Number.isInteger(form.stock) || form.stock < 0) {
+      setError("Stock must be a valid non-negative whole number.");
+      return;
+    }
 
     if (
       form.discountedPrice != null &&
-      form.discountedPrice >= form.price
+      (form.discountedPrice <= 0 ||
+        form.discountedPrice >= form.price)
     ) {
-      setError("Discounted price must be lower than the regular price.");
-      setSaving(false);
+      setError("Discounted price must be greater than zero and lower than the regular price.");
+      return;
+    }
+
+    if (imageError) {
+      setError("Please resolve the image selection error before saving.");
       return;
     }
 
     try {
+      setSaving(true);
+
       let imageUrl = form.imageUrl;
 
       if (selectedFile) {
@@ -149,12 +215,14 @@ const AdminProductEditPage = () => {
 
       await updateProduct(Number(productId), {
         ...form,
+        name: form.name.trim(),
+        description: form.description.trim(),
         imageUrl,
       });
 
       navigate("/admin/products");
     } catch {
-      setError("Failed to update product.");
+      setError("Failed to update product. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -162,15 +230,15 @@ const AdminProductEditPage = () => {
 
   if (loading) {
     return (
-      <div>
-        <div className="mb-8">
+      <div className="space-y-6">
+        <div>
           <div className="h-8 w-40 animate-pulse rounded-lg bg-gray-200" />
-          <div className="mt-3 h-4 w-52 animate-pulse rounded bg-gray-200" />
+          <div className="mt-3 h-4 w-64 animate-pulse rounded bg-gray-200" />
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
-          <div className="h-[500px] animate-pulse rounded-2xl bg-gray-200 lg:col-span-2" />
-          <div className="h-[300px] animate-pulse rounded-2xl bg-gray-200" />
+          <div className="h-[550px] animate-pulse rounded-2xl bg-gray-200 lg:col-span-2" />
+          <div className="h-[350px] animate-pulse rounded-2xl bg-gray-200" />
         </div>
       </div>
     );
@@ -179,69 +247,99 @@ const AdminProductEditPage = () => {
   if (error && !form.name) {
     return (
       <div>
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
-          {error}
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
+          <p className="text-sm font-medium text-red-800">{error}</p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => navigate("/admin/products")}
-          className="mt-6 inline-flex items-center rounded-xl border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-        >
-          Back to Products
-        </button>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() => navigate("/admin/products")}
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+          >
+            <ArrowLeft size={17} />
+            Back to Products
+          </button>
+        </div>
       </div>
     );
   }
 
+  const discountPercentage =
+    form.discountedPrice != null &&
+    form.discountedPrice > 0 &&
+    form.discountedPrice < form.price
+      ? Math.round(
+          ((form.price - form.discountedPrice) / form.price) * 100
+        )
+      : 0;
+
   return (
-    <div>
+    <div className="mx-auto max-w-7xl">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+        <Link
+          to="/admin/products"
+          className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition hover:text-green-700"
+        >
+          <ArrowLeft size={16} />
+          Back to Products
+        </Link>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
             Edit Product
           </h1>
 
-          <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+          <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
             #{productId}
           </span>
         </div>
 
-        <p className="mt-2 text-gray-600">
-          Update the product information and save your changes.
+        <p className="mt-2 text-sm text-gray-500 sm:text-base">
+          Update product information, pricing, inventory and images.
         </p>
       </div>
 
       {/* Error */}
       {error && (
-        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
+        <div
+          role="alert"
+          className="mb-6 flex items-start justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+          <p>{error}</p>
+          <button
+            type="button"
+            onClick={() => setError("")}
+            className="shrink-0 rounded-md p-1 hover:bg-red-100"
+            aria-label="Dismiss error"
+          >
+            <X size={16} />
+          </button>
         </div>
       )}
 
       <form onSubmit={handleSubmit}>
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Product Information */}
+        <div className="grid items-start gap-6 lg:grid-cols-3">
+          {/* Main Product Information */}
           <div className="space-y-6 lg:col-span-2">
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
               <div className="mb-6">
                 <h2 className="text-lg font-semibold text-gray-900">
                   Product Information
                 </h2>
-
                 <p className="mt-1 text-sm text-gray-500">
-                  Update the basic details of this product.
+                  Edit the basic details displayed to customers.
                 </p>
               </div>
 
-              {/* Name */}
+              {/* Product Name */}
               <div>
                 <label
                   htmlFor="name"
                   className="mb-2 block text-sm font-medium text-gray-700"
                 >
-                  Product Name
+                  Product Name <span className="text-red-500">*</span>
                 </label>
 
                 <input
@@ -251,6 +349,8 @@ const AdminProductEditPage = () => {
                   value={form.name}
                   onChange={handleChange}
                   required
+                  maxLength={150}
+                  placeholder="Enter product name"
                   className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
                 />
               </div>
@@ -270,7 +370,8 @@ const AdminProductEditPage = () => {
                   value={form.description}
                   onChange={handleChange}
                   rows={6}
-                  className="w-full resize-none rounded-xl border border-gray-300 px-4 py-3 text-sm leading-6 outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
+                  placeholder="Describe the product, its benefits and uses..."
+                  className="w-full resize-y rounded-xl border border-gray-300 px-4 py-3 text-sm leading-6 outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
                 />
 
                 <p className="mt-2 text-xs text-gray-500">
@@ -278,15 +379,14 @@ const AdminProductEditPage = () => {
                 </p>
               </div>
 
-              {/* Price + Discounted Price + Stock */}
-              <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {/* Regular Price */}
+              {/* Pricing and Stock */}
+              <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                 <div>
                   <label
                     htmlFor="price"
                     className="mb-2 block text-sm font-medium text-gray-700"
                   >
-                    Regular Price
+                    Regular Price <span className="text-red-500">*</span>
                   </label>
 
                   <div className="relative">
@@ -308,7 +408,6 @@ const AdminProductEditPage = () => {
                   </div>
                 </div>
 
-                {/* Discounted Price */}
                 <div>
                   <label
                     htmlFor="discountedPrice"
@@ -334,8 +433,8 @@ const AdminProductEditPage = () => {
                       max={form.price > 0 ? form.price - 0.01 : undefined}
                       value={form.discountedPrice ?? ""}
                       onChange={handleChange}
-                      className="w-full rounded-xl border border-gray-300 py-3 pl-9 pr-4 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
                       placeholder="No discount"
+                      className="w-full rounded-xl border border-gray-300 py-3 pl-9 pr-4 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
                     />
                   </div>
 
@@ -344,13 +443,12 @@ const AdminProductEditPage = () => {
                   </p>
                 </div>
 
-                {/* Stock */}
                 <div>
                   <label
                     htmlFor="stock"
                     className="mb-2 block text-sm font-medium text-gray-700"
                   >
-                    Stock Quantity
+                    Stock Quantity <span className="text-red-500">*</span>
                   </label>
 
                   <input
@@ -358,6 +456,7 @@ const AdminProductEditPage = () => {
                     name="stock"
                     type="number"
                     min="0"
+                    step="1"
                     value={form.stock}
                     onChange={handleChange}
                     required
@@ -366,123 +465,136 @@ const AdminProductEditPage = () => {
                 </div>
               </div>
 
-              {/* Price Preview */}
-              {form.discountedPrice != null &&
-                form.discountedPrice > 0 &&
-                form.discountedPrice < form.price && (
-                  <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4">
-                    <p className="text-xs font-medium uppercase tracking-wide text-green-700">
-                      Discount Preview
-                    </p>
+              {/* Discount Preview */}
+              {discountPercentage > 0 && (
+                <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-green-700">
+                    Discount Preview
+                  </p>
 
-                    <div className="mt-2 flex flex-wrap items-center gap-3">
-                      <span className="text-xl font-bold text-green-800">
-                        ₹{form.discountedPrice.toFixed(2)}
-                      </span>
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <span className="text-xl font-bold text-green-800">
+                      ₹{form.discountedPrice?.toFixed(2)}
+                    </span>
 
-                      <span className="text-sm text-gray-500 line-through">
-                        ₹{form.price.toFixed(2)}
-                      </span>
+                    <span className="text-sm text-gray-500 line-through">
+                      ₹{form.price.toFixed(2)}
+                    </span>
 
-                      <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
-                        {Math.round(
-                          ((form.price - form.discountedPrice) / form.price) * 100
-                        )}
-                        % OFF
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Category */}
-                <div className="mt-6">
-                  <label
-                    htmlFor="category"
-                    className="mb-2 block text-sm font-medium text-gray-700"
-                  >
-                    Category
-                  </label>
-
-                  <select
-                    id="category"
-                    name="category"
-                    value={form.category}
-                    onChange={handleChange}
-                    required
-                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
-                  >
-                    <option value="" disabled>
-                      Select a category
-                    </option>
-
-                    {PRODUCT_CATEGORIES.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
-                      </option>
-                    ))}
-                  </select>
-
-                  {!form.category && (
-                    <p className="mt-2 text-xs text-amber-700">
-                      This product has an older category. Please select one of the
-                      four supported categories before saving.
-                    </p>
-                  )}
-                </div>
-            </div>
-          </div>
-
-          {/* Image + Save */}
-          <div className="space-y-6">
-            {/* Current Image */}
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-              <div className="mb-5">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Product Image
-                </h2>
-
-                <p className="mt-1 text-sm text-gray-500">
-                  Replace the current product image if needed.
-                </p>
-              </div>
-
-              {/* Current image */}
-              {form.imageUrl && !selectedFile && (
-                <div>
-                  <div className="aspect-square overflow-hidden rounded-2xl bg-gray-100">
-                    <img
-                      src={form.imageUrl}
-                      alt={form.name}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-
-                  <div className="mt-3 flex items-center gap-2 text-xs text-green-700">
-                    <Check size={15} />
-                    Current product image
+                    <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
+                      {discountPercentage}% OFF
+                    </span>
                   </div>
                 </div>
               )}
 
-              {/* New image selected */}
+              {/* Category */}
+              <div className="mt-6">
+                <label
+                  htmlFor="category"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
+                  Category <span className="text-red-500">*</span>
+                </label>
+
+                <select
+                  id="category"
+                  name="category"
+                  value={form.category}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100"
+                >
+                  <option value="" disabled>
+                    Select a category
+                  </option>
+
+                  {PRODUCT_CATEGORIES.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+
+                {!form.category && (
+                  <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                    <p className="text-xs leading-5 text-amber-800">
+                      This product has an older or unsupported category.
+                      Select one of the supported categories before saving.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+
+          {/* Image and Save Panel */}
+          <div className="space-y-6">
+            {/* Product Image */}
+            <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+              <div className="mb-5">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Product Image
+                </h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Replace the existing image whenever needed.
+                </p>
+              </div>
+
+              {/* Image Preview */}
+              {(previewUrl || form.imageUrl) ? (
+                <div className="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50">
+                  <div className="aspect-square">
+                    <img
+                      src={previewUrl || form.imageUrl}
+                      alt={form.name || "Product preview"}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex aspect-square flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 bg-gray-50 text-gray-400">
+                  <ImagePlus size={40} strokeWidth={1.5} />
+                  <p className="mt-3 text-sm font-medium">
+                    No product image
+                  </p>
+                </div>
+              )}
+
+              {/* Image Status */}
+              <div className="mt-3 flex items-center gap-2 text-xs">
+                {selectedFile ? (
+                  <span className="flex items-center gap-1.5 font-medium text-green-700">
+                    <Check size={15} />
+                    New image selected
+                  </span>
+                ) : form.imageUrl ? (
+                  <span className="flex items-center gap-1.5 font-medium text-green-700">
+                    <Check size={15} />
+                    Current product image
+                  </span>
+                ) : (
+                  <span className="text-gray-500">
+                    No image uploaded
+                  </span>
+                )}
+              </div>
+
+              {/* Selected File Details */}
               {selectedFile && (
-                <div className="rounded-2xl border border-green-200 bg-green-50/50 p-4">
+                <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-green-100 text-green-700">
-                        <Package size={20} />
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-green-100 text-green-700">
+                        <Package size={19} />
                       </div>
 
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium text-gray-900">
                           {selectedFile.name}
                         </p>
-
                         <p className="mt-1 text-xs text-gray-500">
-                          {(selectedFile.size / 1024 / 1024).toFixed(
-                            2
-                          )}{" "}
-                          MB
+                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                         </p>
                       </div>
                     </div>
@@ -497,21 +609,36 @@ const AdminProductEditPage = () => {
                     </button>
                   </div>
 
-                  <p className="mt-3 text-xs font-medium text-green-700">
-                    This image will replace the current image when
-                    you save.
+                  <p className="mt-3 text-xs leading-5 text-green-700">
+                    This image will replace the current image when you save.
                   </p>
                 </div>
               )}
 
-              {/* Upload button */}
-              {!selectedFile && (
+              {/* Image Error */}
+              {imageError && (
+                <p className="mt-3 text-xs font-medium text-red-600">
+                  {imageError}
+                </p>
+              )}
+
+              {/* Upload Controls */}
+              <div className="mt-4">
                 <label
                   htmlFor="image"
-                  className="group mt-4 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-4 text-sm font-medium text-gray-700 transition hover:border-green-400 hover:bg-green-50/40 hover:text-green-700"
+                  className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-3.5 text-sm font-medium text-gray-700 transition hover:border-green-400 hover:bg-green-50 hover:text-green-700"
                 >
-                  <ImagePlus size={19} />
-                  Replace Image
+                  {selectedFile ? (
+                    <>
+                      <Upload size={17} />
+                      Choose Different Image
+                    </>
+                  ) : (
+                    <>
+                      <ImagePlus size={18} />
+                      Replace Image
+                    </>
+                  )}
 
                   <input
                     id="image"
@@ -521,39 +648,22 @@ const AdminProductEditPage = () => {
                     className="hidden"
                   />
                 </label>
-              )}
-
-              {selectedFile && (
-                <label
-                  htmlFor="image"
-                  className="mt-4 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-                >
-                  <Upload size={17} />
-                  Choose Different Image
-
-                  <input
-                    id="image"
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                </label>
-              )}
+              </div>
 
               <p className="mt-3 text-xs leading-5 text-gray-500">
-                Supported formats: JPG, PNG and WebP.
+                Supported formats: JPG, PNG and WebP. Maximum size: 5 MB.
+                Leave unchanged to keep the current image.
               </p>
-            </div>
+            </section>
 
-            {/* Save */}
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            {/* Save Changes */}
+            <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
               <h2 className="text-lg font-semibold text-gray-900">
                 Save Changes
               </h2>
 
               <p className="mt-1 text-sm leading-6 text-gray-500">
-                Your changes will be saved to the product immediately.
+                Review your changes before updating this product.
               </p>
 
               <div className="mt-5 space-y-3">
@@ -563,7 +673,6 @@ const AdminProductEditPage = () => {
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Save size={17} />
-
                   {saving ? "Saving Changes..." : "Save Changes"}
                 </button>
 
@@ -576,7 +685,7 @@ const AdminProductEditPage = () => {
                   Cancel
                 </button>
               </div>
-            </div>
+            </section>
           </div>
         </div>
       </form>
