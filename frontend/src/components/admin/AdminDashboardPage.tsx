@@ -1,9 +1,11 @@
+
 import { useEffect, useState } from "react";
 import {
   IndianRupee,
   Package,
   ShoppingCart,
   Clock,
+  Truck,
   ArrowRight,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -48,18 +50,20 @@ const AdminDashboardPage = () => {
       description: "All customer orders",
     },
     {
-      label: "Total Products",
-      value: dashboard ? dashboard.totalProducts.toLocaleString("en-IN") : "—",
-      icon: Package,
-      description: "Products in your store",
-    },
-    {
       label: "Pending Orders",
       value: dashboard
         ? dashboard.pendingOrders.toLocaleString("en-IN")
         : "—",
       icon: Clock,
       description: "Orders awaiting processing",
+    },
+    {
+      label: "Undelivered Orders",
+      value: dashboard
+        ? dashboard.undeliveredOrders.toLocaleString("en-IN")
+        : "—",
+      icon: Truck,
+      description: "Orders not yet delivered",
     },
     {
       label: "Revenue",
@@ -72,14 +76,42 @@ const AdminDashboardPage = () => {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-          Dashboard
-        </h1>
+      <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+            Dashboard
+          </h1>
 
-        <p className="mt-2 text-gray-600">
-          Overview of your Haksan Naturals store.
-        </p>
+          <p className="mt-2 text-gray-600">
+            Overview of your Haksan Naturals store.
+          </p>
+        </div>
+
+        {/* Total Products */}
+        <Link
+          to="/admin/products"
+          className="group flex items-center justify-between gap-5 rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm transition hover:-translate-y-0.5 hover:border-green-200 hover:shadow-md sm:min-w-[220px]"
+        >
+          <div>
+            <p className="text-sm font-medium text-gray-500">
+              Total Products
+            </p>
+
+            <p className="mt-1 text-2xl font-bold text-gray-900">
+              {dashboard
+                ? dashboard.totalProducts.toLocaleString("en-IN")
+                : "—"}
+            </p>
+
+            <p className="mt-1 text-xs font-medium text-green-700">
+              Manage products
+            </p>
+          </div>
+
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-700 transition group-hover:bg-green-100">
+            <Package size={21} strokeWidth={1.9} />
+          </div>
+        </Link>
       </div>
 
       {/* Loading and Error States */}
@@ -98,7 +130,7 @@ const AdminDashboardPage = () => {
         </div>
       )}
 
-      {/* Stats */}
+      {/* Statistics */}
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => {
           const Icon = stat.icon;

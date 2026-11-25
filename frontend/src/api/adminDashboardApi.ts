@@ -4,6 +4,7 @@ export interface AdminDashboardResponse {
   totalOrders: number;
   totalProducts: number;
   pendingOrders: number;
+  undeliveredOrders: number;
   totalRevenue: number;
 }
 
